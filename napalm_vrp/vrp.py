@@ -29,8 +29,8 @@ from napalm.base.exceptions import (
 )
 
 
-class SkeletonDriver(NetworkDriver):
-    """Napalm driver for Skeleton."""
+class VRPDriver(NetworkDriver):
+    """Napalm driver for huawei vrp."""
 
     def __init__(self, hostname, username, password, timeout=60, optional_args=None):
         """Constructor."""
