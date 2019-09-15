@@ -14,7 +14,7 @@
 # the License.
 
 """
-Napalm driver for Skeleton.
+Napalm driver for Huawei Enterprise switch.
 
 Read https://napalm.readthedocs.io for more information.
 """
