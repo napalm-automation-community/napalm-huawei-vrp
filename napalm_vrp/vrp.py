@@ -809,28 +809,75 @@ class VRPDriver(NetworkDriver):
         lldp_neighbors = {}
         return lldp_neighbors
 
+    # ok
+    def get_arp_table(self, vrf=""):
+        """
+                Get arp table information.
 
-    # ---------------------------
-    # Planned to development function
-    # ---------------------------
+                Return a list of dictionaries having the following set of keys:
+                    * interface (string)
+                    * mac (string)
+                    * ip (string)
+                    * age (float) (not support)
+
+                Sample output:
+                    [
+                        {
+                            'interface' : 'MgmtEth0/RSP0/CPU0/0',
+                            'mac'       : '5c:5e:ab:da:3c:f0',
+                            'ip'        : '172.17.17.1',
+                            'age'       : -1
+                        },
+                        {
+                            'interface': 'MgmtEth0/RSP0/CPU0/0',
+                            'mac'       : '66:0e:94:96:e0:ff',
+                            'ip'        : '172.17.17.2',
+                            'age'       : -1
+                        }
+                    ]
+                """
+        arp_table = []
+        output = self.device.send_command('display arp')
+        re_arp = r"(?P<ip_address>\d+\.\d+\.\d+\.\d+)\s+(?P<mac>\S+)\s+(?P<exp>\d+|)\s+" \
+                 r"(?P<type>I|D|S|O)\S+\s+(?P<interface>\S+)"
+        match = re.findall(re_arp, output, flags=re.M)
+
+        for arp in match:
+            # if arp[2].isdigit():
+            #     exp = float(arp[2]) * 60
+            # else:
+            #     exp = 0
+
+            entry = {
+                'interface': arp[4],
+                'mac': napalm.base.helpers.mac(arp[1]),
+                'ip': arp[0],
+                'age': -1.0,
+            }
+            arp_table.append(entry)
+        return arp_table
+
+    # develop
     def get_mac_address_table(self):
         pass
 
+    # develop
     def pre_connection_tests(self):
         pass
 
+    # develop
     def connection_tests(self):
         pass
 
+    # develop
     def post_connection_tests(self):
         pass
 
-    def get_arp_table(self, vrf=""):
-        pass
-
+    # develop
     def get_route_to(self, destination="", protocol=""):
         pass
 
+    # develop
     def get_snmp_information(self):
         snmp_information = {}
         # command = 'display snmp-agent sys-info'
@@ -845,28 +892,36 @@ class VRPDriver(NetworkDriver):
         return snmp_information
         pass
 
+    # develop
     def get_probes_config(self):
         pass
 
+    # develop
     def get_probes_results(self):
         pass
 
+    # develop
     def traceroute(self, destination, source=c.TRACEROUTE_SOURCE, ttl=c.TRACEROUTE_TTL, timeout=c.TRACEROUTE_TIMEOUT,
                    vrf=c.TRACEROUTE_VRF):
         pass
 
+    # develop
     def get_users(self):
         pass
 
+    # develop
     def get_optics(self):
         pass
 
+    # develop
     def get_network_instances(self, name=""):
         pass
 
+    # develop
     def get_ipv6_neighbors_table(self):
         pass
 
+    # develop
     def get_ntp_peers(self):
         """
         Return the NTP peers configuration as dictionary.
@@ -884,6 +939,7 @@ class VRPDriver(NetworkDriver):
         # output = self.device.send_command(command)
         return ntp_server
 
+    # develop
     def get_ntp_servers(self):
         """
         Return the NTP servers configuration as dictionary.
@@ -901,6 +957,7 @@ class VRPDriver(NetworkDriver):
         # output = self.device.send_command(command)
         return ntp_server
 
+    # develop
     def get_ntp_stats(self):
         ntp_stats = []
         # command = "display ntp status"
