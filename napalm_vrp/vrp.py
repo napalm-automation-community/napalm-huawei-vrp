@@ -22,6 +22,7 @@ from napalm.base import NetworkDriver
 from napalm.base.utils import py23_compat
 from napalm.base.netmiko_helpers import netmiko_args
 import napalm.base.constants as c
+from netmiko import FileTransfer, InLineTransfer
 from napalm.base.exceptions import (
     ConnectionException,
     SessionLockedException,
@@ -29,6 +30,7 @@ from napalm.base.exceptions import (
     ReplaceConfigException,
     CommandErrorException,
     ConnectionClosedException,
+    CommitError,
 )
 
 from datetime import datetime
@@ -37,6 +39,7 @@ import re
 import telnetlib
 import os
 import tempfile
+import paramiko
 import uuid
 import hashlib
 
@@ -48,7 +51,7 @@ YEAR_SECONDS = 365 * DAY_SECONDS
 
 
 class VRPDriver(NetworkDriver):
-    """Napalm driver for huawei vrp."""
+    """Napalm driver for Huawei vrp."""
 
     def __init__(self, hostname, username, password, timeout=60, optional_args=None):
         """Constructor.
@@ -326,7 +329,7 @@ class VRPDriver(NetworkDriver):
             environment['memory']['used_ram'] = int(match.group("used_ram"))
         return environment
 
-    # Need to verify
+    # ok
     def get_config(self, retrieve="all", full=False):
         """
         Get config from device.
@@ -350,115 +353,7 @@ class VRPDriver(NetworkDriver):
             pass
         return config
 
-    @staticmethod
-    def _parse_uptime(uptime_str):
-        """Return the uptime in seconds as an integer."""
-        (years, weeks, days, hours, minutes, seconds) = (0, 0, 0, 0, 0, 0)
-
-        years_regx = re.search(r"(?P<year>\d+)\syear", uptime_str)
-        if years_regx is not None:
-            years = int(years_regx.group(1))
-        weeks_regx = re.search(r"(?P<week>\d+)\sweek", uptime_str)
-        if weeks_regx is not None:
-            weeks = int(weeks_regx.group(1))
-        days_regx = re.search(r"(?P<day>\d+)\sday", uptime_str)
-        if days_regx is not None:
-            days = int(days_regx.group(1))
-        hours_regx = re.search(r"(?P<hour>\d+)\shour", uptime_str)
-        if hours_regx is not None:
-            hours = int(hours_regx.group(1))
-        minutes_regx = re.search(r"(?P<minute>\d+)\sminute", uptime_str)
-        if minutes_regx is not None:
-            minutes = int(minutes_regx.group(1))
-        seconds_regx = re.search(r"(?P<second>\d+)\ssecond", uptime_str)
-        if seconds_regx is not None:
-            seconds = int(seconds_regx.group(1))
-
-        uptime_sec = (years * YEAR_SECONDS) + (weeks * WEEK_SECONDS) + (days * DAY_SECONDS) + \
-                     (hours * 3600) + (minutes * 60) + seconds
-        return uptime_sec
-
-    # ---------------------------
-    # Planned to development function
-    # ---------------------------
-    def get_mac_address_table(self):
-        pass
-
-    def get_lldp_neighbors(self):
-        pass
-
-    def get_lldp_neighbors_detail(self, interface=""):
-        pass
-
-    def pre_connection_tests(self):
-        pass
-
-    def connection_tests(self):
-        pass
-
-    def post_connection_tests(self):
-        pass
-
-    def load_replace_candidate(self, filename=None, config=None):
-        pass
-
-    def load_merge_candidate(self, filename=None, config=None):
-        pass
-
-    def compare_config(self):
-        pass
-
-    def commit_config(self, message=""):
-        pass
-
-    def discard_config(self):
-        pass
-
-    def rollback(self):
-        pass
-
-    def get_interfaces(self):
-        pass
-
-    def get_interfaces_counters(self):
-        pass
-
-    def get_bgp_config(self, group="", neighbor=""):
-        pass
-
-    def get_bgp_neighbors(self):
-        pass
-
-    def get_bgp_neighbors_detail(self, neighbor_address=""):
-        pass
-
-    def get_arp_table(self, vrf=""):
-        pass
-
-    def get_ntp_peers(self):
-        pass
-
-    def get_ntp_servers(self):
-        pass
-
-    def get_ntp_stats(self):
-        pass
-
-    def get_interfaces_ip(self):
-        pass
-
-    def get_route_to(self, destination="", protocol=""):
-        pass
-
-    def get_snmp_information(self):
-        pass
-
-    def get_probes_config(self):
-        pass
-
-    def get_probes_results(self):
-        pass
-
+    # ok
     def ping(self, destination, source=c.PING_SOURCE, ttl=c.PING_TTL, timeout=c.PING_TIMEOUT, size=c.PING_SIZE,
              count=c.PING_COUNT, vrf=c.PING_VRF):
         """Execute ping on the device."""
@@ -518,6 +413,174 @@ class VRPDriver(NetworkDriver):
 
 
 
+
+    def load_merge_candidate(self, filename=None, config=None):
+        """Open the candidate config and merge."""
+        if not filename and not config:
+            raise MergeConfigException('filename or config param must be provided.')
+
+        self.merge_candidate += '\n'  # insert one extra line
+        if filename is not None:
+            with open(filename, "r") as f:
+                self.merge_candidate += f.read()
+        else:
+            self.merge_candidate += config
+
+        self.replace = False
+        self.loaded = True
+
+    def load_replace_candidate(self, filename=None, config=None):
+        """Open the candidate config and replace."""
+        if not filename and not config:
+            raise ReplaceConfigException('filename or config param must be provided.')
+
+        self._replace_candidate(filename, config)
+        self.replace = True
+        self.loaded = True
+
+    def commit_config(self, message=""):
+        """Commit configuration."""
+        if self.loaded:
+            try:
+                self.backup_file = 'config_' + datetime.now().strftime("%Y%m%d_%H%M") + '.cfg'
+                if self._check_file_exists(self.backup_file):
+                    self._delete_file(self.backup_file)
+                self._save_config(self.backup_file)
+                if self.replace:
+                    self._load_config(self.replace_file.split('/')[-1])
+                else:
+                    self._commit_merge()
+                    self.merge_candidate = ''  # clear the merge buffer
+
+                self.changed = True
+                self.loaded = False
+                self._save_config()
+            except Exception as e:
+                raise CommitError(str(e))
+        else:
+            raise CommitError('No config loaded.')
+
+    # check the load data
+    def compare_config(self):
+        """Compare candidate config with running."""
+        if self.loaded:
+            if not self.replace:
+                return self._get_merge_diff()
+                # return self.merge_candidate
+            diff = self._get_diff(self.replace_file.split('/')[-1])
+            return diff
+        return ''
+
+    def discard_config(self):
+        """Discard changes."""
+        if self.loaded:
+            self.merge_candidate = ''  # clear the buffer
+        if self.loaded and self.replace:
+            self._delete_file(self.replace_file)
+        self.loaded = False
+
+    # 不生效
+    def rollback(self):
+        """Rollback to previous commit."""
+        if self.changed:
+            self._load_config(self.backup_file)
+            self.changed = False
+            self._save_config()
+
+
+
+    # support def
+    @staticmethod
+    def _parse_uptime(uptime_str):
+        """Return the uptime in seconds as an integer."""
+        (years, weeks, days, hours, minutes, seconds) = (0, 0, 0, 0, 0, 0)
+
+        years_regx = re.search(r"(?P<year>\d+)\syear", uptime_str)
+        if years_regx is not None:
+            years = int(years_regx.group(1))
+        weeks_regx = re.search(r"(?P<week>\d+)\sweek", uptime_str)
+        if weeks_regx is not None:
+            weeks = int(weeks_regx.group(1))
+        days_regx = re.search(r"(?P<day>\d+)\sday", uptime_str)
+        if days_regx is not None:
+            days = int(days_regx.group(1))
+        hours_regx = re.search(r"(?P<hour>\d+)\shour", uptime_str)
+        if hours_regx is not None:
+            hours = int(hours_regx.group(1))
+        minutes_regx = re.search(r"(?P<minute>\d+)\sminute", uptime_str)
+        if minutes_regx is not None:
+            minutes = int(minutes_regx.group(1))
+        seconds_regx = re.search(r"(?P<second>\d+)\ssecond", uptime_str)
+        if seconds_regx is not None:
+            seconds = int(seconds_regx.group(1))
+
+        uptime_sec = (years * YEAR_SECONDS) + (weeks * WEEK_SECONDS) + (days * DAY_SECONDS) + \
+                     (hours * 3600) + (minutes * 60) + seconds
+        return uptime_sec
+
+    # ---------------------------
+    # Planned to development function
+    # ---------------------------
+    def get_mac_address_table(self):
+        pass
+
+    def get_lldp_neighbors(self):
+        pass
+
+    def get_lldp_neighbors_detail(self, interface=""):
+        pass
+
+    def pre_connection_tests(self):
+        pass
+
+    def connection_tests(self):
+        pass
+
+    def post_connection_tests(self):
+        pass
+
+    def get_interfaces(self):
+        pass
+
+    def get_interfaces_counters(self):
+        pass
+
+    def get_bgp_config(self, group="", neighbor=""):
+        pass
+
+    def get_bgp_neighbors(self):
+        pass
+
+    def get_bgp_neighbors_detail(self, neighbor_address=""):
+        pass
+
+    def get_arp_table(self, vrf=""):
+        pass
+
+    def get_ntp_peers(self):
+        pass
+
+    def get_ntp_servers(self):
+        pass
+
+    def get_ntp_stats(self):
+        pass
+
+    def get_interfaces_ip(self):
+        pass
+
+    def get_route_to(self, destination="", protocol=""):
+        pass
+
+    def get_snmp_information(self):
+        pass
+
+    def get_probes_config(self):
+        pass
+
+    def get_probes_results(self):
+        pass
+
     def traceroute(self, destination, source=c.TRACEROUTE_SOURCE, ttl=c.TRACEROUTE_TTL, timeout=c.TRACEROUTE_TIMEOUT,
                    vrf=c.TRACEROUTE_VRF):
         pass
@@ -536,3 +599,320 @@ class VRPDriver(NetworkDriver):
 
     def get_ipv6_neighbors_table(self):
         pass
+
+
+
+
+
+    def __get_snmp_information(self):
+        snmp_information = {}
+        # command = 'display snmp-agent sys-info'
+        # output = self.device.send_command(command)
+
+        snmp_information = {
+            'contact': py23_compat.text_type(''),
+            'location': py23_compat.text_type(''),
+            'community': {},
+            'chassis_id': py23_compat.text_type('')
+        }
+        return snmp_information
+
+    def __get_lldp_neighbors_detail(self, interface=''):
+        """
+        Return a detailed view of the LLDP neighbors as a dictionary.
+
+        Sample output:
+        {
+        'TenGigE0/0/0/8': [
+            {
+                'parent_interface': u'Bundle-Ether8',
+                'remote_chassis_id': u'8c60.4f69.e96c',
+                'remote_system_name': u'switch',
+                'remote_port': u'Eth2/2/1',
+                'remote_port_description': u'Ethernet2/2/1',
+                'remote_system_description': u'''huawei os''',
+                'remote_system_capab': u'B, R',
+                'remote_system_enable_capab': u'B'
+            }
+        ]
+        }
+        """
+        lldp_neighbors = {}
+        return lldp_neighbors
+
+    def __get_ntp_peers(self):
+        """
+        Return the NTP peers configuration as dictionary.
+
+        Sample output:
+        {
+            '192.168.0.1': {},
+            '17.72.148.53': {},
+            '37.187.56.220': {},
+            '162.158.20.18': {}
+        }
+        """
+        ntp_server = {}
+        # command = "display ntp session"
+        # output = self.device.send_command(command)
+        return ntp_server
+
+    def __get_ntp_servers(self):
+        """
+        Return the NTP servers configuration as dictionary.
+
+        Sample output:
+        {
+            '192.168.0.1': {},
+            '17.72.148.53': {},
+            '37.187.56.220': {},
+            '162.158.20.18': {}
+        }
+        """
+        ntp_server = {}
+        # command = "display ntp trace"
+        # output = self.device.send_command(command)
+        return ntp_server
+
+    def __get_ntp_stats(self):
+        ntp_stats = []
+        # command = "display ntp status"
+        # output = self.device.send_command(command)
+        return ntp_stats
+
+    @staticmethod
+    def _separate_section(separator, content):
+        if content == "":
+            return []
+
+        # Break output into per-interface sections
+        interface_lines = re.split(separator, content, flags=re.M)
+
+        if len(interface_lines) == 1:
+            msg = "Unexpected output data:\n{}".format(interface_lines)
+            raise ValueError(msg)
+
+        # Get rid of the blank data at the beginning
+        interface_lines.pop(0)
+
+        # Must be pairs of data (the separator and section corresponding to it)
+        if len(interface_lines) % 2 != 0:
+            msg = "Unexpected output data:\n{}".format(interface_lines)
+            raise ValueError(msg)
+
+        # Combine the separator and section into one string
+        intf_iter = iter(interface_lines)
+
+        try:
+            new_interfaces = [line + next(intf_iter, '') for line in intf_iter]
+        except TypeError:
+            raise ValueError()
+        return new_interfaces
+
+    def _delete_file(self, filename):
+        command = 'delete /unreserved /quiet {0}'.format(filename)
+        self.device.send_command(command)
+
+    def _save_config(self, filename=''):
+        """Save the current running config to the given file."""
+        command = 'save {}'.format(filename)
+        save_log = self.device.send_command(command, max_loops=10, expect_string=r'Y/N')
+        # Search pattern will not be detected when set a new hostname, so don't use auto_find_prompt=False
+        save_log += self.device.send_command('y', expect_string=r'<.+>')
+        search_result = re.search("successfully", save_log, re.M)
+        if search_result is None:
+            msg = "Failed to save config. Command output:{}".format(save_log)
+            raise CommandErrorException(msg)
+
+    def _load_config(self, config_file):
+        command = 'rollback configuration to file {0}'.format(config_file)
+        rollback_result = self.device.send_command(command, expect_string=r'Y/N')
+        rollback_result += self.device.send_command('y', expect_string=r'[<\[].+[>\]]')
+        search_result = re.search("clear the information", rollback_result, re.M)
+        if search_result is not None:
+            rollback_result += self.device.send_command('y', expect_string=r'<.+>')
+
+        search_result = re.search("succeeded|finished", rollback_result, re.M)
+        if search_result is None:
+            msg = "Failed to load config. Command output:{}".format(rollback_result)
+            raise CommandErrorException(msg)
+
+    def _replace_candidate(self, filename, config):
+        if not filename:
+            filename = self._create_tmp_file(config)
+        else:
+            if not os.path.isfile(filename):
+                raise ReplaceConfigException("File {} not found".format(filename))
+
+        self.replace_file = filename
+
+        if not self._enough_space(self.replace_file):
+            msg = 'Could not transfer file. Not enough space on device.'
+            raise ReplaceConfigException(msg)
+
+        need_transfer = True
+        if self._check_file_exists(self.replace_file):
+            if self._check_md5(self.replace_file):
+                need_transfer = False
+        if need_transfer:
+            dest = os.path.basename(self.replace_file)
+            # full_remote_path = 'flash:/{}'.format(dest)
+            with paramiko.SSHClient() as ssh:
+                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                ssh.connect(hostname=self.hostname, username=self.username, password=self.password, port=self.port,
+                            look_for_keys=False)
+
+                try:
+                    with paramiko.SFTPClient.from_transport(ssh.get_transport()) as sftp_client:
+                        sftp_client.put(self.replace_file, dest)
+                    # with SCPClient(ssh.get_transport()) as scp_client:
+                    #     scp_client.put(self.replace_file, dest)
+                except Exception as e:
+                    msg = 'Could not transfer file. There was an error during transfer:' + str(e)
+                    raise ReplaceConfigException(msg)
+        self.config_replace = True
+        if config and os.path.isfile(self.replace_file):
+            os.remove(self.replace_file)
+
+    def _verify_remote_file_exists(self, dst, file_system='flash:'):
+        command = 'dir {0}/{1}'.format(file_system, dst)
+        output = self.device.send_command(command)
+        if 'No file found' in output:
+            raise ReplaceConfigException('Could not transfer file.')
+
+    def _check_file_exists(self, cfg_file):
+        command = 'dir {}'.format(cfg_file)
+        output = self.device.send_command(command)
+        if 'No file found' in output:
+            return False
+        return True
+
+    def _check_md5(self, dst):
+        dst_hash = self._get_remote_md5(dst)
+        src_hash = self._get_local_md5(dst)
+        if src_hash == dst_hash:
+            return True
+        return False
+
+    @staticmethod
+    def _get_local_md5(dst, blocksize=2**20):
+        md5 = hashlib.md5()
+        local_file = open(dst, 'rb')
+        buf = local_file.read(blocksize)
+        while buf:
+            md5.update(buf)
+            buf = local_file.read(blocksize)
+        local_file.close()
+        return md5.hexdigest()
+
+    def _get_remote_md5(self, dst):
+        command = 'display system file-md5 {0}'.format(dst)
+        output = self.device.send_command(command)
+        filename = os.path.basename(dst)
+        match = re.search(filename + r'\s+(?P<md5>\w+)', output, re.M)
+        if match is None:
+            msg = "Unexpected format: {}".format(output)
+            raise ValueError(msg)
+        return match.group('md5')
+
+    def _commit_merge(self):
+        commands = [command for command in self.merge_candidate.splitlines() if command]
+        output = ''
+
+        try:
+            output += self.device.send_command('system-view', expect_string=r'\[.+\]')
+            for command in commands:
+                output += self.device.send_command(command, expect_string=r'\[.+\]')
+
+            if self.device.check_config_mode():
+                check_error = re.search("error", output, re.IGNORECASE)
+                if check_error is not None:
+                    return_log = self.device.send_command('return', expect_string=r'[<\[].+[>\]]')
+                    if 'Uncommitted configurations' in return_log:
+                        # Discard uncommitted configuration
+                        return_log += self.device.send_command('n', expect_string=r'<.+>')
+                    output += return_log
+                    raise MergeConfigException('Error while applying config!')
+                output += self.device.send_command('commit', expect_string=r'\[.+\]')
+                output += self.device.send_command('return', expect_string=r'<.+>')
+            else:
+                raise MergeConfigException('Not in configuration mode.')
+        except Exception as e:
+            msg = str(e) + '\nconfiguration output: ' + output
+            raise MergeConfigException(msg)
+
+    def _get_merge_diff(self):
+        diff = []
+        running_config = self.get_config(retrieve='running')['running']
+        running_lines = running_config.splitlines()
+        for line in self.merge_candidate.splitlines():
+            if line not in running_lines and line:
+                if line[0].strip() != '!':
+                    diff.append(line)
+        return '\n'.join(diff)
+
+    def _get_diff(self, filename=None):
+        """Get a diff between running config and a proposed file."""
+        if filename is None:
+            return self.device.send_command('display configuration changes')
+        return self.device.send_command('display configuration changes running file ' + filename)
+
+    def _enough_space(self, filename):
+        flash_size = self._get_flash_size()
+        file_size = os.path.getsize(filename)
+        if file_size > flash_size:
+            return False
+        return True
+
+    def _get_flash_size(self):
+        command = 'dir {}'.format('flash:')
+        output = self.device.send_command(command)
+
+        match = re.search(r'\(\d.*KB free\)', output, re.M)
+        if match is None:
+            msg = "Failed to get free space of flash (not match). Log: {}".format(output)
+            raise ValueError(msg)
+
+        kbytes_free = 0
+        num_list = map(int, re.findall(r'\d+', match.group()))
+        for index, val in enumerate(reversed(num_list)):
+            kbytes_free += val * (1000 ** index)
+        bytes_free = kbytes_free * 1024
+        return bytes_free
+
+    @staticmethod
+    def _parse_uptime(uptime_str):
+        """Return the uptime in seconds as an integer."""
+        (years, weeks, days, hours, minutes, seconds) = (0, 0, 0, 0, 0, 0)
+
+        years_regx = re.search(r"(?P<year>\d+)\syear", uptime_str)
+        if years_regx is not None:
+            years = int(years_regx.group(1))
+        weeks_regx = re.search(r"(?P<week>\d+)\sweek", uptime_str)
+        if weeks_regx is not None:
+            weeks = int(weeks_regx.group(1))
+        days_regx = re.search(r"(?P<day>\d+)\sday", uptime_str)
+        if days_regx is not None:
+            days = int(days_regx.group(1))
+        hours_regx = re.search(r"(?P<hour>\d+)\shour", uptime_str)
+        if hours_regx is not None:
+            hours = int(hours_regx.group(1))
+        minutes_regx = re.search(r"(?P<minute>\d+)\sminute", uptime_str)
+        if minutes_regx is not None:
+            minutes = int(minutes_regx.group(1))
+        seconds_regx = re.search(r"(?P<second>\d+)\ssecond", uptime_str)
+        if seconds_regx is not None:
+            seconds = int(seconds_regx.group(1))
+
+        uptime_sec = (years * YEAR_SECONDS) + (weeks * WEEK_SECONDS) + (days * DAY_SECONDS) + \
+                     (hours * 3600) + (minutes * 60) + seconds
+        return uptime_sec
+
+    @staticmethod
+    def _create_tmp_file(config):
+        tmp_dir = tempfile.gettempdir()
+        rand_fname = py23_compat.text_type(uuid.uuid4())
+        filename = os.path.join(tmp_dir, rand_fname)
+        with open(filename, 'wt') as fobj:
+            fobj.write(config)
+        return filename
