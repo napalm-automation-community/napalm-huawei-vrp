@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2016 Dravetech AB. All rights reserved.
+# Copyright 2020 Locus Li All rights reserved.
 #
 # The contents of this file are licensed under the Apache License, Version 2.0
 # (the "License"); you may not use this file except in compliance with the
@@ -14,10 +14,11 @@
 # the License.
 
 """
-Napalm driver for huawei Enterprise switch, the vrp software.
+Napalm driver for huawei Enterprise switch, community contribution.
 
 Read https://napalm.readthedocs.io for more information.
 """
+
 from napalm.base import NetworkDriver
 import napalm.base.helpers
 from napalm.base.utils import py23_compat
@@ -195,21 +196,26 @@ class VRPDriver(NetworkDriver):
         show_ver = self.device.send_command('display version')
         show_hostname = self.device.send_command('display current-configuration | inc sysname')
         show_int_status = self.device.send_command('display interface brief')
+        show_esn = self.device.send_command('display esn')
 
-        # serial_number/IOS version/uptime/model
+        # os_version/uptime/model
         for line in show_ver.splitlines():
             if 'VRP (R) software' in line:
-                search_result = re.search(r"\((?P<serial_number>S\S+)\s+(?P<os_version>V\S+)\)", line)
+                search_result = re.search(r"\(S\S+\s+(?P<os_version>V\S+)\)", line)
                 if search_result is not None:
-                    serial_number = search_result.group('serial_number')
                     os_version = search_result.group('os_version')
 
             if 'HUAWEI' in line and 'uptime is' in line:
-                search_result = re.search(r"CE\S+", line)
+                search_result = re.search(r"S\S+", line)
                 if search_result is not None:
                     model = search_result.group(0)
                 uptime = self._parse_uptime(line)
                 break
+
+        # get serial_number,due to the stack have multiple SN, so show it in a list
+        # 由于堆叠设备会有多少个SN，所以这里用列表展示
+        re_sn = r"ESN\s+of\s+slot\s+\S+\s+(?P<serial_number>\S+)"
+        serial_number = re.findall(re_sn, show_esn, flags=re.M)
 
         if 'sysname ' in show_hostname:
             _, hostname = show_hostname.split("sysname ")
@@ -229,7 +235,7 @@ class VRPDriver(NetworkDriver):
             'uptime': int(uptime),
             'vendor': vendor,
             'os_version': py23_compat.text_type(os_version),
-            'serial_number': py23_compat.text_type(serial_number),
+            'serial_number': serial_number,
             'model': py23_compat.text_type(model),
             'hostname': py23_compat.text_type(hostname),
             'fqdn': fqdn,  # ? fqdn(fully qualified domain name)
@@ -857,7 +863,7 @@ class VRPDriver(NetworkDriver):
             arp_table.append(entry)
         return arp_table
 
-    # develop
+    # ok
     def get_mac_address_table(self):
         """
         Return the MAC address table.

@@ -61,6 +61,7 @@ target/
 
 #Ipython Notebook
 .idea
+.ipynb
 venv
 .ipynb_checkpoints
 TestVRP.ipynb
