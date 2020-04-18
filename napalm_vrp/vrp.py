@@ -19,6 +19,7 @@ Napalm driver for huawei Enterprise switch, the vrp software.
 Read https://napalm.readthedocs.io for more information.
 """
 from napalm.base import NetworkDriver
+import napalm.base.helpers
 from napalm.base.utils import py23_compat
 from napalm.base.netmiko_helpers import netmiko_args
 import napalm.base.constants as c
@@ -119,6 +120,7 @@ class VRPDriver(NetworkDriver):
         # Track whether 'file prompt quiet' is known to be configured
         self.prompt_quiet_configured = None
 
+    # ok
     def open(self):
         """Open a connection to the device.
         """
@@ -129,6 +131,7 @@ class VRPDriver(NetworkDriver):
             device_type, netmiko_optional_args=self.netmiko_optional_args
         )
 
+    # ok
     def close(self):
         """Close the connection to the device and do the necessary cleanup."""
 
@@ -139,6 +142,7 @@ class VRPDriver(NetworkDriver):
             self.prompt_quiet_configured = False
         self._netmiko_close()
 
+    # ok
     def is_alive(self):
         """ Returns a flag with the state of the connection."""
         if self.device is None:
@@ -161,6 +165,7 @@ class VRPDriver(NetworkDriver):
             # If unable to send, we can tell for sure that the connection is unusable
             return {'is_alive': False}
 
+    # ok
     def cli(self, commands):
         """Execute a list of commands and return the output in a dictionary format using the command
         Example input:
@@ -178,7 +183,7 @@ class VRPDriver(NetworkDriver):
 
         return cli_output
 
-    # unfinished，need to fix
+    # need to develop
     def get_facts(self):
         """Return a set of facts from the devices."""
         # default values.
@@ -231,7 +236,7 @@ class VRPDriver(NetworkDriver):
             'interface_list': interface_list
         }
 
-    # unfinished，need to fix
+    # need to develop
     def get_environment(self):
         """
         Return environment details.
@@ -411,7 +416,7 @@ class VRPDriver(NetworkDriver):
                 ping_dict['success'].update({'results': results_array})
         return ping_dict
 
-
+    # ok
     def get_interfaces(self):
         """
         Get interface details (last_flapped is not implemented).
@@ -494,6 +499,7 @@ class VRPDriver(NetworkDriver):
             })
         return interfaces
 
+    # ok
     def get_interfaces_ip(self):
         """
         Get interface IP details. Returns a dictionary of dictionaries.
@@ -578,6 +584,7 @@ class VRPDriver(NetworkDriver):
 
         return interfaces_ip
 
+    # ok
     def get_interfaces_counters(self):
         """Return interfaces counters."""
         def process_counts(tup):
@@ -665,8 +672,7 @@ class VRPDriver(NetworkDriver):
             })
         return interfaces
 
-
-
+    # ok
     def load_merge_candidate(self, filename=None, config=None):
         """Open the candidate config and merge."""
         if not filename and not config:
@@ -682,6 +688,7 @@ class VRPDriver(NetworkDriver):
         self.replace = False
         self.loaded = True
 
+    # need to develop
     def load_replace_candidate(self, filename=None, config=None):
         """Open the candidate config and replace."""
         if not filename and not config:
@@ -691,6 +698,7 @@ class VRPDriver(NetworkDriver):
         self.replace = True
         self.loaded = True
 
+    # ok
     def commit_config(self, message=""):
         """Commit configuration."""
         if self.loaded:
@@ -713,7 +721,7 @@ class VRPDriver(NetworkDriver):
         else:
             raise CommitError('No config loaded.')
 
-    # check the load data
+    # ok
     def compare_config(self):
         """Compare candidate config with running."""
         if self.loaded:
@@ -724,6 +732,7 @@ class VRPDriver(NetworkDriver):
             return diff
         return ''
 
+    # ok
     def discard_config(self):
         """Discard changes."""
         if self.loaded:
@@ -732,7 +741,7 @@ class VRPDriver(NetworkDriver):
             self._delete_file(self.replace_file)
         self.loaded = False
 
-    # 不生效
+    # need to develop
     def rollback(self):
         """Rollback to previous commit."""
         if self.changed:
