@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2020 Locus Li All rights reserved.
+# Copyright 2020 2016 Dravetech AB. All rights reserved.
 #
 # The contents of this file are licensed under the Apache License, Version 2.0
 # (the "License"); you may not use this file except in compliance with the
@@ -14,7 +14,7 @@
 # the License.
 
 """
-Napalm driver for huawei Enterprise switch, community contribution.
+Napalm driver for huawei Enterprise switch, community.
 
 Read https://napalm.readthedocs.io for more information.
 """
@@ -184,7 +184,7 @@ class VRPDriver(NetworkDriver):
 
         return cli_output
 
-    # develop
+    # ok
     def get_facts(self):
         """Return a set of facts from the devices."""
         # default values.
