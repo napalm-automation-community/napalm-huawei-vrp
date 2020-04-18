@@ -5,23 +5,24 @@ import uuid
 from setuptools import setup, find_packages
 from pip.req import parse_requirements
 
-__author__ = 'David Barroso <dbarrosop@dravetech.com>'
+__author__ = 'Locus Li <locus@byto.top>'
 
 install_reqs = parse_requirements('requirements.txt', session=uuid.uuid1())
 reqs = [str(ir.req) for ir in install_reqs]
 
 setup(
-    name="napalm-skeleton",
+    name="napalm-vrp",
     version="0.1.0",
     packages=find_packages(),
-    author="David Barroso",
-    author_email="dbarrosop@dravetech.com",
-    description="Network Automation and Programmability Abstraction Layer with Multivendor support",
+    author="Locus Li",
+    author_email="Locus Li",
+    description="Network Automation and Programmability Abstraction Layer with huawei Enterprise switch support,"
+                " Most of these models are S5700 series、S6700 series，etc",
     classifiers=[
         'Topic :: Utilities',
          'Programming Language :: Python',
          'Programming Language :: Python :: 2',
-         'Programming Language :: Python :: 2.7',
+         'Programming Language :: Python :: 3',
         'Operating System :: POSIX :: Linux',
         'Operating System :: MacOS',
     ],

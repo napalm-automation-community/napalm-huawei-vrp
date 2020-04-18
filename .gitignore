@@ -60,4 +60,9 @@ docs/_build/
 target/
 
 #Ipython Notebook
+.idea
+venv
 .ipynb_checkpoints
+TestVRP.ipynb
+napalm_vrp/ce.py
+test/test.py
