@@ -18,7 +18,6 @@ Napalm driver for huawei Enterprise switch, the vrp software.
 
 Read https://napalm.readthedocs.io for more information.
 """
-
 from napalm.base import NetworkDriver
 from napalm.base.utils import py23_compat
 from napalm.base.netmiko_helpers import netmiko_args
@@ -161,23 +160,9 @@ class VRPDriver(NetworkDriver):
 
     def cli(self, commands):
         """Execute a list of commands and return the output in a dictionary format using the command
-        as the key.
-
         Example input:
         ['dis version', 'dis cu']
-
-        Output example:
-        {   'show calendar': u'22:02:01 UTC Thu Feb 18 2016',
-            'show clock': u'*22:01:51.165 UTC Thu Feb 18 2016'}
         """
-        # cli_output = {}
-        # if type(commands) is not list:
-        #     raise TypeError('Please enter a valid list of commands!')
-        #
-        # for command in commands:
-        #     output = self.device.send_command(command)
-        #     cli_output[py23_compat.text_type(command)] = output
-        # return cli_output
 
         cli_output = dict()
         if type(commands) is not list:
@@ -476,7 +461,62 @@ class VRPDriver(NetworkDriver):
 
     def ping(self, destination, source=c.PING_SOURCE, ttl=c.PING_TTL, timeout=c.PING_TIMEOUT, size=c.PING_SIZE,
              count=c.PING_COUNT, vrf=c.PING_VRF):
-        pass
+        """Execute ping on the device."""
+        ping_dict = {}
+        command = 'ping'
+        # Timeout in milliseconds to wait for each reply, the default is 2000
+        command += ' -t {}'.format(timeout*1000)
+        # Specify the number of data bytes to be sent
+        command += ' -s {}'.format(size)
+        # Specify the number of echo requests to be sent
+        command += ' -c {}'.format(count)
+        if source != '':
+            command += ' -a {}'.format(source)
+        command += ' {}'.format(destination)
+        output = self.device.send_command(command)
+
+        if 'Error' in output:
+            ping_dict['error'] = output
+        elif 'PING' in output:
+            ping_dict['success'] = {
+                                'probes_sent': 0,
+                                'packet_loss': 0,
+                                'rtt_min': 0.0,
+                                'rtt_max': 0.0,
+                                'rtt_avg': 0.0,
+                                'rtt_stddev': 0.0,
+                                'results': []
+            }
+
+            match_sent = re.search(r"(\d+).+transmitted", output, re.M)
+            match_received = re.search(r"(\d+).+received", output, re.M)
+
+            try:
+                probes_sent = int(match_sent.group(1))
+                probes_received = int(match_received.group(1))
+                ping_dict['success']['probes_sent'] = probes_sent
+                ping_dict['success']['packet_loss'] = probes_sent - probes_received
+            except Exception:
+                msg = "Unexpected output data:\n{}".format(output)
+                raise ValueError(msg)
+
+            match = re.search(r"min/avg/max = (\d+)/(\d+)/(\d+)", output, re.M)
+            if match:
+                ping_dict['success'].update({
+                    'rtt_min': float(match.group(1)),
+                    'rtt_avg': float(match.group(2)),
+                    'rtt_max': float(match.group(3)),
+                })
+
+                results_array = []
+                match = re.findall(r"Reply from.+time=(\d+)", output, re.M)
+                for i in match:
+                    results_array.append({'ip_address': py23_compat.text_type(destination),
+                                          'rtt': float(i)})
+                ping_dict['success'].update({'results': results_array})
+        return ping_dict
+
+
 
     def traceroute(self, destination, source=c.TRACEROUTE_SOURCE, ttl=c.TRACEROUTE_TTL, timeout=c.TRACEROUTE_TIMEOUT,
                    vrf=c.TRACEROUTE_VRF):

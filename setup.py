@@ -3,12 +3,11 @@
 import uuid
 
 from setuptools import setup, find_packages
-from pip.req import parse_requirements
+
+with open("requirements.txt", "r") as fs:
+    reqs = [r for r in fs.read().splitlines() if (len(r) > 0 and not r.startswith("#"))]
 
 __author__ = 'Locus Li <locus@byto.top>'
-
-install_reqs = parse_requirements('requirements.txt', session=uuid.uuid1())
-reqs = [str(ir.req) for ir in install_reqs]
 
 setup(
     name="napalm-vrp",
@@ -16,8 +15,7 @@ setup(
     packages=find_packages(),
     author="Locus Li",
     author_email="locus@byto.top",
-    description="Network Automation and Programmability Abstraction Layer with huawei Enterprise switch(VRP) support,"
-                " Most of these models are S5700 series、S6700 series，etc",
+    description="Network Automation and Programmability Abstraction Layer with huawei Enterprise switch(VRP) support",
     classifiers=[
         'Topic :: Utilities',
          'Programming Language :: Python',
