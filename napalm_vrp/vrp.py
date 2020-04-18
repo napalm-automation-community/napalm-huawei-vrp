@@ -859,7 +859,63 @@ class VRPDriver(NetworkDriver):
 
     # develop
     def get_mac_address_table(self):
-        pass
+        """
+        Return the MAC address table.
+
+        Sample output:
+        [
+            {
+                "active": true,
+                "interface": "10GE1/0/1",
+                "last_move": -1.0,
+                "mac": "00:00:00:00:00:33",
+                "moves": -1,
+                "static": false,
+                "vlan": 100
+            },
+            {
+                "active": false,
+                "interface": "10GE1/0/2",
+                "last_move": -1.0,
+                "mac": "00:00:00:00:00:01",
+                "moves": -1,
+                "static": true,
+                "vlan": 200
+            }
+        ]
+        MAC type:
+            标识MAC地址的类型：
+                static：     静态MAC地址表项。由用户手工配置，表项不会被老化。
+                blackhole：  标识黑洞MAC地址表项，由用户手工配置，表项不会被老化。可以通过命令mac-address blackhole配置。
+                dynamic：    标识动态MAC地址表项，由设备通过源MAC地址学习获得，表项有老化时间，可被老化。
+                security：   标识安全动态MAC表项，由接口使能端口安全功能后学习到的MAC地址表项。
+                sec-config： 标识安全静态MAC表项，由命令port-security mac-address配置的MAC地址表项。
+                sticky：     标识Sticky MAC表项，由接口使能Sticky MAC功能后学习到的MAC地址表项。
+                mux：        标识MUX MAC表项，当接口使能MUX VLAN功能后，该接口学习到的MAC地址表项会记录到mux类型的MAC地址表项中。
+                snooping：   根据DHCP Snooping绑定表生成的静态MAC表项类型。
+                authen：     已获取到IP地址的NAC认证用户（无法生成MAC地址的三层Portal认证用户和直接转发模式下的无线用户除外）对应的MAC地址表项。
+                pre-authen： 用户使能NAC认证功能后，处于预连接状态且未获取到IP地址的NAC认证用户对应的MAC地址表项。
+                evpn：       标识EVPN网络中存在的MAC地址表项。
+        """
+        mac_address_table = []
+        command = 'display mac-address'
+        output = self.device.send_command(command)
+        re_mac = r"(?P<mac>\S+)\s+(?P<vlan>\d+|-)\S+\s+(?P<interface>\S+)\s+(?P<type>\w+)\s+"
+        match = re.findall(re_mac, output, re.M)
+
+        for mac_info in match:
+            mac_dict = {
+                'mac': napalm.base.helpers.mac(mac_info[0]),
+                'interface': mac_info[2],
+                'vlan': int(mac_info[1]),
+                'static': True if mac_info[3] == "static" else False,
+                'active': True if mac_info[3] == "dynamic" else False,
+                'authen': True if mac_info[3] == "authen" else False,
+                'moves': -1,
+                'last_move': -1.0
+            }
+            mac_address_table.append(mac_dict)
+        return mac_address_table
 
     # develop
     def pre_connection_tests(self):
