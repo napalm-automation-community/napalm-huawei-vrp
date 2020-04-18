@@ -749,6 +749,43 @@ class VRPDriver(NetworkDriver):
             self.changed = False
             self._save_config()
 
+    def get_lldp_neighbors(self):
+        """
+        Return LLDP neighbors details.
+
+        Sample output:
+        {
+            "10GE4/0/1": [
+                {
+                    "hostname": "HUAWEI",
+                    "port": "10GE4/0/25"
+                },
+                {
+                    "hostname": "HUAWEI2",
+                    "port": "10GE4/0/26"
+                }
+            ]
+        }
+        """
+        results = {}
+        command = 'display lldp neighbor brief'
+        output = self.device.send_command(command)
+        re_lldp = r"(?P<local>\S+)\s+\d+\s+(?P<port>\S+)\s+(?P<hostname>\S+)"
+        match = re.findall(re_lldp, output, re.M)
+        for neighbor in match:
+            local_iface = neighbor[0]
+            if local_iface not in results:
+                results[local_iface] = []
+
+            neighbor_dict = dict()
+            neighbor_dict['port'] = py23_compat.text_type(neighbor[1])
+            neighbor_dict['hostname'] = py23_compat.text_type(neighbor[2])
+            results[local_iface].append(neighbor_dict)
+        return results
+
+    def get_lldp_neighbors_detail(self, interface=""):
+        pass
+
 
 
     # support def
@@ -784,12 +821,6 @@ class VRPDriver(NetworkDriver):
     # Planned to development function
     # ---------------------------
     def get_mac_address_table(self):
-        pass
-
-    def get_lldp_neighbors(self):
-        pass
-
-    def get_lldp_neighbors_detail(self, interface=""):
         pass
 
     def pre_connection_tests(self):
