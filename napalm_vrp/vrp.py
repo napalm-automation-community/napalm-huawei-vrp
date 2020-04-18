@@ -183,7 +183,7 @@ class VRPDriver(NetworkDriver):
 
         return cli_output
 
-    # need to develop
+    # develop
     def get_facts(self):
         """Return a set of facts from the devices."""
         # default values.
@@ -236,7 +236,7 @@ class VRPDriver(NetworkDriver):
             'interface_list': interface_list
         }
 
-    # need to develop
+    # develop
     def get_environment(self):
         """
         Return environment details.
@@ -688,7 +688,7 @@ class VRPDriver(NetworkDriver):
         self.replace = False
         self.loaded = True
 
-    # need to develop
+    # develop
     def load_replace_candidate(self, filename=None, config=None):
         """Open the candidate config and replace."""
         if not filename and not config:
@@ -741,7 +741,7 @@ class VRPDriver(NetworkDriver):
             self._delete_file(self.replace_file)
         self.loaded = False
 
-    # need to develop
+    # develop
     def rollback(self):
         """Rollback to previous commit."""
         if self.changed:
@@ -749,6 +749,7 @@ class VRPDriver(NetworkDriver):
             self.changed = False
             self._save_config()
 
+    # ok
     def get_lldp_neighbors(self):
         """
         Return LLDP neighbors details.
@@ -783,134 +784,9 @@ class VRPDriver(NetworkDriver):
             results[local_iface].append(neighbor_dict)
         return results
 
+    # develop
     def get_lldp_neighbors_detail(self, interface=""):
         pass
-
-
-
-    # support def
-    @staticmethod
-    def _parse_uptime(uptime_str):
-        """Return the uptime in seconds as an integer."""
-        (years, weeks, days, hours, minutes, seconds) = (0, 0, 0, 0, 0, 0)
-
-        years_regx = re.search(r"(?P<year>\d+)\syear", uptime_str)
-        if years_regx is not None:
-            years = int(years_regx.group(1))
-        weeks_regx = re.search(r"(?P<week>\d+)\sweek", uptime_str)
-        if weeks_regx is not None:
-            weeks = int(weeks_regx.group(1))
-        days_regx = re.search(r"(?P<day>\d+)\sday", uptime_str)
-        if days_regx is not None:
-            days = int(days_regx.group(1))
-        hours_regx = re.search(r"(?P<hour>\d+)\shour", uptime_str)
-        if hours_regx is not None:
-            hours = int(hours_regx.group(1))
-        minutes_regx = re.search(r"(?P<minute>\d+)\sminute", uptime_str)
-        if minutes_regx is not None:
-            minutes = int(minutes_regx.group(1))
-        seconds_regx = re.search(r"(?P<second>\d+)\ssecond", uptime_str)
-        if seconds_regx is not None:
-            seconds = int(seconds_regx.group(1))
-
-        uptime_sec = (years * YEAR_SECONDS) + (weeks * WEEK_SECONDS) + (days * DAY_SECONDS) + \
-                     (hours * 3600) + (minutes * 60) + seconds
-        return uptime_sec
-
-    # ---------------------------
-    # Planned to development function
-    # ---------------------------
-    def get_mac_address_table(self):
-        pass
-
-    def pre_connection_tests(self):
-        pass
-
-    def connection_tests(self):
-        pass
-
-    def post_connection_tests(self):
-        pass
-
-    def get_interfaces(self):
-        pass
-
-    def get_interfaces_counters(self):
-        pass
-
-    def get_bgp_config(self, group="", neighbor=""):
-        pass
-
-    def get_bgp_neighbors(self):
-        pass
-
-    def get_bgp_neighbors_detail(self, neighbor_address=""):
-        pass
-
-    def get_arp_table(self, vrf=""):
-        pass
-
-    def get_ntp_peers(self):
-        pass
-
-    def get_ntp_servers(self):
-        pass
-
-    def get_ntp_stats(self):
-        pass
-
-    def get_interfaces_ip(self):
-        pass
-
-    def get_route_to(self, destination="", protocol=""):
-        pass
-
-    def get_snmp_information(self):
-        pass
-
-    def get_probes_config(self):
-        pass
-
-    def get_probes_results(self):
-        pass
-
-    def traceroute(self, destination, source=c.TRACEROUTE_SOURCE, ttl=c.TRACEROUTE_TTL, timeout=c.TRACEROUTE_TIMEOUT,
-                   vrf=c.TRACEROUTE_VRF):
-        pass
-
-    def get_users(self):
-        pass
-
-    def get_optics(self):
-        pass
-
-    def get_network_instances(self, name=""):
-        pass
-
-    def get_firewall_policies(self):
-        pass
-
-    def get_ipv6_neighbors_table(self):
-        pass
-
-
-
-
-
-    def __get_snmp_information(self):
-        snmp_information = {}
-        # command = 'display snmp-agent sys-info'
-        # output = self.device.send_command(command)
-
-        snmp_information = {
-            'contact': py23_compat.text_type(''),
-            'location': py23_compat.text_type(''),
-            'community': {},
-            'chassis_id': py23_compat.text_type('')
-        }
-        return snmp_information
-
-    def __get_lldp_neighbors_detail(self, interface=''):
         """
         Return a detailed view of the LLDP neighbors as a dictionary.
 
@@ -933,7 +809,65 @@ class VRPDriver(NetworkDriver):
         lldp_neighbors = {}
         return lldp_neighbors
 
-    def __get_ntp_peers(self):
+
+    # ---------------------------
+    # Planned to development function
+    # ---------------------------
+    def get_mac_address_table(self):
+        pass
+
+    def pre_connection_tests(self):
+        pass
+
+    def connection_tests(self):
+        pass
+
+    def post_connection_tests(self):
+        pass
+
+    def get_arp_table(self, vrf=""):
+        pass
+
+    def get_route_to(self, destination="", protocol=""):
+        pass
+
+    def get_snmp_information(self):
+        snmp_information = {}
+        # command = 'display snmp-agent sys-info'
+        # output = self.device.send_command(command)
+
+        snmp_information = {
+            'contact': py23_compat.text_type(''),
+            'location': py23_compat.text_type(''),
+            'community': {},
+            'chassis_id': py23_compat.text_type('')
+        }
+        return snmp_information
+        pass
+
+    def get_probes_config(self):
+        pass
+
+    def get_probes_results(self):
+        pass
+
+    def traceroute(self, destination, source=c.TRACEROUTE_SOURCE, ttl=c.TRACEROUTE_TTL, timeout=c.TRACEROUTE_TIMEOUT,
+                   vrf=c.TRACEROUTE_VRF):
+        pass
+
+    def get_users(self):
+        pass
+
+    def get_optics(self):
+        pass
+
+    def get_network_instances(self, name=""):
+        pass
+
+    def get_ipv6_neighbors_table(self):
+        pass
+
+    def get_ntp_peers(self):
         """
         Return the NTP peers configuration as dictionary.
 
@@ -950,7 +884,7 @@ class VRPDriver(NetworkDriver):
         # output = self.device.send_command(command)
         return ntp_server
 
-    def __get_ntp_servers(self):
+    def get_ntp_servers(self):
         """
         Return the NTP servers configuration as dictionary.
 
@@ -967,11 +901,16 @@ class VRPDriver(NetworkDriver):
         # output = self.device.send_command(command)
         return ntp_server
 
-    def __get_ntp_stats(self):
+    def get_ntp_stats(self):
         ntp_stats = []
         # command = "display ntp status"
         # output = self.device.send_command(command)
         return ntp_stats
+
+
+
+
+
 
     @staticmethod
     def _separate_section(separator, content):
