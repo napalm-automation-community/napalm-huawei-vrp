@@ -412,6 +412,259 @@ class VRPDriver(NetworkDriver):
         return ping_dict
 
 
+    def get_interfaces(self):
+        """
+        Get interface details (last_flapped is not implemented).
+
+        Sample Output:
+        {
+            "Vlanif3000": {
+                "is_enabled": false,
+                "description": "Route Port,The Maximum Transmit Unit is 1500",
+                "last_flapped": -1.0,
+                "is_up": false,
+                "mac_address": "0C:45:BA:7D:83:E6",
+                "speed": -1
+            },
+            "Vlanif100": {
+                "is_enabled": false,
+                "description": "Route Port,The Maximum Transmit Unit is 1500",
+                "last_flapped": -1.0,
+                "is_up": false,
+                "mac_address": "0C:45:BA:7D:83:E4",
+                "speed": -1
+            }
+        }
+        """
+        interfaces = {}
+        output = self.device.send_command('display interface')
+        if not output:
+            return {}
+
+        separator = r"(^(?!Line protocol).*current state.*$)"
+        re_intf_name_state = r"^(?!Line protocol)(?P<intf_name>\S+).+current state\W+(?P<intf_state>.+)$"
+        re_protocol = r"Line protocol current state\W+(?P<protocol>.+)$"
+        re_mac = r"Hardware address is\W+(?P<mac_address>\S+)"
+        re_speed = r"^Speed\W+(?P<speed>\d+|\w+)"
+        re_description = r"^Description\W+(?P<description>.*)$"
+
+        new_interfaces = self._separate_section(separator, output)
+        for interface in new_interfaces:
+            interface = interface.strip()
+            match_intf = re.search(re_intf_name_state, interface, flags=re.M)
+            match_proto = re.search(re_protocol, interface, flags=re.M)
+
+            if match_intf is None or match_proto is None:
+                msg = "Unexpected interface format: {}".format(interface)
+                raise ValueError(msg)
+            intf_name = match_intf.group('intf_name')
+            intf_state = match_intf.group('intf_state')
+            is_enabled = bool('up' in intf_state.lower())
+
+            protocol = match_proto.group('protocol')
+            is_up = bool('up' in protocol.lower())
+
+            match_mac = re.search(re_mac, interface, flags=re.M)
+            if match_mac:
+                mac_address = match_mac.group('mac_address')
+                mac_address = napalm.base.helpers.mac(mac_address)
+            else:
+                mac_address = ""
+
+            speed = -1
+            match_speed = re.search(re_speed, interface, flags=re.M)
+            if match_speed:
+                speed = match_speed.group('speed')
+                if speed.isdigit():
+                    speed = int(speed)
+
+            description = ''
+            match = re.search(re_description, interface, flags=re.M)
+            if match:
+                description = match.group('description')
+
+            interfaces.update({
+                intf_name: {
+                    'description': description,
+                    'is_enabled': is_enabled,
+                    'is_up': is_up,
+                    'last_flapped': -1.0,
+                    'mac_address': mac_address,
+                    'speed': speed}
+            })
+        return interfaces
+
+    def get_interfaces_ip(self):
+        """
+        Get interface IP details. Returns a dictionary of dictionaries.
+
+        Sample output:
+        {
+            "LoopBack0": {
+                "ipv4": {
+                    "192.168.0.9": {
+                        "prefix_length": 32
+                    }
+                }
+            },
+            "Vlanif2000": {
+                "ipv4": {
+                    "192.168.200.3": {
+                        "prefix_length": 24
+                    },
+                    "192.168.200.6": {
+                        "prefix_length": 24
+                    },
+                    "192.168.200.8": {
+                        "prefix_length": 24
+                    }
+                },
+                "ipv6": {
+                    "FC00::1": {
+                        "prefix_length": 64
+                    }
+                }
+            }
+        }
+        """
+        interfaces_ip = {}
+        output_v4 = self.device.send_command('display ip interface')
+        output_v6 = self.device.send_command('display ipv6 interface')
+
+        v4_interfaces = {}
+        separator = r"(^(?!Line protocol).*current state.*$)"
+        new_v4_interfaces = self._separate_section(separator, output_v4)
+        for interface in new_v4_interfaces:
+            re_intf_name_state = r"^(?!Line protocol)(?P<intf_name>\S+).+current state\W+(?P<intf_state>.+)$"
+            re_intf_ip = r"Internet Address is\s+(?P<ip_address>\d+.\d+.\d+.\d+)\/(?P<prefix_length>\d+)"
+
+            match_intf = re.search(re_intf_name_state, interface, flags=re.M)
+            if match_intf is None:
+                msg = "Unexpected interface format: {}".format(interface)
+                raise ValueError(msg)
+            intf_name = match_intf.group('intf_name')
+            # v4_interfaces[intf_name] = {}
+            match_ip = re.findall(re_intf_ip, interface, flags=re.M)
+
+            for ip_info in match_ip:
+                val = {'prefix_length': int(ip_info[1])}
+                # v4_interfaces[intf_name][ip_info[0]] = val
+                v4_interfaces.setdefault(intf_name, {})[ip_info[0]] = val
+
+        v6_interfaces = {}
+        separator = r"(^(?!IPv6 protocol).*current state.*$)"
+        new_v6_interfaces = self._separate_section(separator, output_v6)
+        for interface in new_v6_interfaces:
+            re_intf_name_state = r"^(?!IPv6 protocol)(?P<intf_name>\S+).+current state\W+(?P<intf_state>.+)$"
+            re_intf_ip = r"(?P<ip_address>\S+), subnet is.+\/(?P<prefix_length>\d+)"
+
+            match_intf = re.search(re_intf_name_state, interface, flags=re.M)
+            if match_intf is None:
+                msg = "Unexpected interface format: {}".format(interface)
+                raise ValueError(msg)
+            intf_name = match_intf.group('intf_name')
+            match_ip = re.findall(re_intf_ip, interface, flags=re.M)
+
+            for ip_info in match_ip:
+                val = {'prefix_length': int(ip_info[1])}
+                v6_interfaces.setdefault(intf_name, {})[ip_info[0]] = val
+
+        # Join data from intermediate dictionaries.
+        for interface, data in v4_interfaces.items():
+            interfaces_ip.setdefault(interface, {'ipv4': {}})['ipv4'] = data
+
+        for interface, data in v6_interfaces.items():
+            interfaces_ip.setdefault(interface, {'ipv6': {}})['ipv6'] = data
+
+        return interfaces_ip
+
+    def get_interfaces_counters(self):
+        """Return interfaces counters."""
+        def process_counts(tup):
+            for item in tup:
+                if item != "":
+                    return int(item)
+            return 0
+
+        interfaces = {}
+        # command "display interface counters" lacks of some keys
+        output = self.device.send_command('display interface')
+        if not output:
+            return {}
+
+        separator = r"(^(?!Line protocol).*current state.*$)"
+        re_intf_name_state = r"^(?!Line protocol)(?P<intf_name>\S+).+current state\W+(?P<intf_state>.+)$"
+        re_unicast = r"Unicast:\s+(\d+)|(\d+)\s+unicast"
+        re_multicast = r"Multicast:\s+(\d+)|(\d+)\s+multicast"
+        re_broadcast = r"Broadcast:\s+(\d+)|(\d+)\s+broadcast"
+        re_dicards = r"Discard:\s+(\d+)|(\d+)\s+discard"
+        re_rx_octets = r"Input.+\s+(\d+)\sbytes|Input:.+,(\d+)\sbytes"
+        re_tx_octets = r"Output.+\s+(\d+)\sbytes|Output:.+,(\d+)\sbytes"
+        re_errors = r"Total Error:\s+(\d+)|(\d+)\s+errors"
+
+        new_interfaces = self._separate_section(separator, output)
+        for interface in new_interfaces:
+            interface = interface.strip()
+            match_intf = re.search(re_intf_name_state, interface, flags=re.M)
+
+            if match_intf is None:
+                msg = "Unexpected interface format: {}".format(interface)
+                raise ValueError(msg)
+            intf_name = match_intf.group('intf_name')
+            intf_counter = {
+                    'tx_errors': 0,
+                    'rx_errors': 0,
+                    'tx_discards': 0,
+                    'rx_discards': 0,
+                    'tx_octets': 0,
+                    'rx_octets': 0,
+                    'tx_unicast_packets': 0,
+                    'rx_unicast_packets': 0,
+                    'tx_multicast_packets': 0,
+                    'rx_multicast_packets': 0,
+                    'tx_broadcast_packets': 0,
+                    'rx_broadcast_packets': 0
+                }
+
+            match = re.findall(re_errors, interface, flags=re.M)
+            if match:
+                intf_counter['rx_errors'] = process_counts(match[0])
+            if len(match) == 2:
+                intf_counter['tx_errors'] = process_counts(match[1])
+
+            match = re.findall(re_dicards, interface, flags=re.M)
+            if len(match) == 2:
+                intf_counter['rx_discards'] = process_counts(match[0])
+                intf_counter['tx_discards'] = process_counts(match[1])
+
+            match = re.findall(re_unicast, interface, flags=re.M)
+            if len(match) == 2:
+                intf_counter['rx_unicast_packets'] = process_counts(match[0])
+                intf_counter['tx_unicast_packets'] = process_counts(match[1])
+
+            match = re.findall(re_multicast, interface, flags=re.M)
+            if len(match) == 2:
+                intf_counter['rx_multicast_packets'] = process_counts(match[0])
+                intf_counter['tx_multicast_packets'] = process_counts(match[1])
+
+            match = re.findall(re_broadcast, interface, flags=re.M)
+            if len(match) == 2:
+                intf_counter['rx_broadcast_packets'] = process_counts(match[0])
+                intf_counter['tx_broadcast_packets'] = process_counts(match[1])
+
+            match = re.findall(re_rx_octets, interface, flags=re.M)
+            if match:
+                intf_counter['rx_octets'] = process_counts(match[0])
+
+            match = re.findall(re_tx_octets, interface, flags=re.M)
+            if match:
+                intf_counter['tx_octets'] = process_counts(match[0])
+
+            interfaces.update({
+                intf_name: intf_counter
+            })
+        return interfaces
+
 
 
     def load_merge_candidate(self, filename=None, config=None):
@@ -875,7 +1128,7 @@ class VRPDriver(NetworkDriver):
 
         kbytes_free = 0
         num_list = map(int, re.findall(r'\d+', match.group()))
-        for index, val in enumerate(reversed(num_list)):
+        for index, val in enumerate(reversed([num_list])):
             kbytes_free += val * (1000 ** index)
         bytes_free = kbytes_free * 1024
         return bytes_free
