@@ -11,7 +11,7 @@ __author__ = 'Locus Li <locus@byto.top>'
 
 setup(
     name="napalm-vrp",
-    version="0.1.0",
+    version="0.1.1",
     packages=find_packages(),
     author="Locus Li",
     author_email="locus@byto.top",

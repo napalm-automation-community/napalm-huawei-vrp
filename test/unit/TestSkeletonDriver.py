@@ -16,7 +16,7 @@
 
 import unittest
 
-from napalm_vrp import vrp
+from napalm_huawe_vrp import vrp
 from napalm.base.test.base import TestConfigNetworkDriver
 
 
