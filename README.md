@@ -1,4 +1,7 @@
-# napalm-huawei-vrp
+[![PyPI](https://img.shields.io/pypi/v/napalm-huawei-vrp.svg)](https://pypi.python.org/pypi/napalm-huawei-vrp)
+[![PyPI](https://img.shields.io/pypi/dm/napalm-huawei-vrp.svg)](https://pypi.python.org/pypi/napalm-huawei-vrp)
+
+# napalm-huawei-vrp [中文版](README-ZH.md)
 
 NAPALM driver for HUAWEI Campus Network Switch, support the S5700,S6700 etc.
 
@@ -15,7 +18,8 @@ The driver is functional and can be used to poll status information:
 * ping(): Ping remote ip
 * get_arp_table(): Get device ARP table
 * get_mac_address_table(): Get mac table of connected devices
-* get_interfaces_ip(): Get interface IP
+* get_interfaces(): Get interface information
+* get_interfaces_ip(): Get interface IP information
 * get_interfaces_counters(): Get interface counters
 
 ## How to Install
