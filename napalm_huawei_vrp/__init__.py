@@ -13,6 +13,6 @@
 # the License.
 
 """napalm-skeleton package."""
-from napalm_huawei_vrp.vrp import VRPDriver  # noqa
+from napalm_huawei_vrp.huawei_vrp import VRPDriver
 
 __all__ = ('VRPDriver',)

@@ -100,7 +100,7 @@ class VRPDriver(NetworkDriver):
         self.replace = False
         self.merge_candidate = ''
         self.replace_file = ''
-        self.profile = ["vrp"]
+        self.profile = ["huawei_vrp"]
 
         # netmiko args
         self.netmiko_optional_args = netmiko_args(optional_args)

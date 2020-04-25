@@ -26,13 +26,13 @@ NAPALM华为S系列园区网交换机驱动，支持S5700,S6700等.
 
 使用PIP来安装napalm-huawei-vrp
 
-`pip install napalm napalm-huawei-vrp`
+`pip install napalm-huawei-vrp`
 
 ## 快速开始
 
 ```python
 from napalm import get_network_driver
-driver = get_network_driver('huawei-vrp')
+driver = get_network_driver('huawei_vrp')
 device = driver(hostname='192.168.76.10', username='admin', password='this_is_not_a_secure_password')
 device.open()
 

@@ -26,13 +26,13 @@ The driver is functional and can be used to poll status information:
 
 Install napalm and install napalm-huawei-vrp via pip:
 
-`pip install napalm napalm-huawei-vrp`
+`pip install napalm-huawei-vrp`
 
 ## Quick start
 
 ```python
 from napalm import get_network_driver
-driver = get_network_driver('huawei-vrp')
+driver = get_network_driver('huawei_vrp')
 device = driver(hostname='192.168.76.10', username='admin', password='this_is_not_a_secure_password')
 device.open()
 
