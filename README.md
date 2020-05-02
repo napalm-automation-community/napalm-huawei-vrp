@@ -8,7 +8,12 @@ NAPALM driver for HUAWEI Campus Network Switch, support the S5700,S6700 etc.
 
 ## Instructions
 
-The driver is functional and can be used to poll status information:
+The driver is under development and iteration.
+
+| Function   | Description  |
+|--------|-----|
+| get_facts()  | Return general device information |
+
 
 * get_facts(): Return general device information
 * cli(): send any cli commands
