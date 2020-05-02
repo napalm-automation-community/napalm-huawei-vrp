@@ -10,28 +10,40 @@ NAPALM driver for HUAWEI Campus Network Switch, support the S5700,S6700 etc.
 
 The driver is under development and iteration.
 
-| Function   | Description  |
+### Supported
+
+| API   | Description  |
 |--------|-----|
-| get_facts()  | Return general device information |
+|  load_merge_candidate()     |  Load config |
+|  compare_config()           |  A string showing the difference between the running configuration and the candidate configuration |
+|  discard_config()           |  Discards the configuration loaded into the candidate |
+|  commit_config()            |  Commits the changes requested by the method load_replace_candidate or load_merge_candidate |
+|  cli()                      |  Send any cli commands  |
+|  get_facts()                |  Return general device information |
+|  get_lldp_neighbors()       |  Fetch LLDP neighbor information |
+|  get_config()               |  Read config |
+|  is_active()                |  get devices active status  |
+|  ping()                     |  Ping remote ip  |
+|  get_arp_table()            |  Get device ARP table |
+|  get_mac_address_table()    |  Get mac table of connected devices |
+|  get_interfaces()           |  Get interface information |
+|  get_interfaces_ip()        |  Get interface IP information  |
+|  get_interfaces_counters()  |  Get interface counters  |
 
+### Plans to develop
 
-* get_facts(): Return general device information
-* cli(): send any cli commands
-* get_lldp_neighbors(): Fetch LLDP neighbor information
-* get_config(): Read config
-* is_active(): get devices active status
-* ping(): Ping remote ip
-* get_arp_table(): Get device ARP table
-* get_mac_address_table(): Get mac table of connected devices
-* get_interfaces(): Get interface information
-* get_interfaces_ip(): Get interface IP information
-* get_interfaces_counters(): Get interface counters
+* get_environment()
+* get_lldp_neighbors_detail()
+* get_snmp_information()
+* get_users()
 
 ## How to Install
 
-Install napalm and install napalm-huawei-vrp via pip:
+You can install napalm-huawei-vrp with pip:
 
 `pip install napalm-huawei-vrp`
+
+That will install napalm and huawei_vrp driver currently available.
 
 ## Quick start
 
