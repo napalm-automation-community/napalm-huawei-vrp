@@ -45,6 +45,12 @@ You can install napalm-huawei-vrp with pip:
 
 That will install napalm and huawei_vrp driver currently available.
 
+## How to upgrade
+
+You can upgrade napalm-huawei-vrp with pip once the new version released:
+
+`pip install --upgrade napalm-huawei-vrp`
+
 ## Quick start
 
 ```python
