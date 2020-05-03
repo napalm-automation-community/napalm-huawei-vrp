@@ -754,36 +754,49 @@ class VRPDriver(NetworkDriver):
     # ok
     def get_lldp_neighbors(self):
         """
-        Return LLDP neighbors details.
+        Return LLDP neighbors brief info.
+
+        Sample input:
+            <device-vrp>dis lldp neighbor brief
+            Local Intf    Neighbor Dev          Neighbor Intf             Exptime(s)
+            XGE0/0/1      huawei-S5720-01       XGE0/0/1                  96
+            XGE0/0/3      huawei-S5720-POE      XGE0/0/1                  119
+            XGE0/0/46     Aruba-7210-M          GE0/0/2                   95
 
         Sample output:
         {
-            "10GE4/0/1": [
+            'XGE0/0/1': [
                 {
-                    "hostname": "HUAWEI",
-                    "port": "10GE4/0/25"
+                    'hostname': 'huawei-S5720-01',
+                    'port': 'XGE0/0/1'
                 },
+            'XGE0/0/3': [
                 {
-                    "hostname": "HUAWEI2",
-                    "port": "10GE4/0/26"
-                }
+                    'hostname': 'huawei-S5720-POE',
+                    'port': 'XGE0/0/1'
+                },
+            'XGE0/0/46': [
+                {
+                    'hostname': 'Aruba-7210-M',
+                    'port': 'GE0/0/2'
+                },
             ]
         }
         """
         results = {}
         command = 'display lldp neighbor brief'
         output = self.device.send_command(command)
-        re_lldp = r"(?P<local>\S+)\s+\d+\s+(?P<port>\S+)\s+(?P<hostname>\S+)"
+        re_lldp = r"(?P<local>\S+)\s+(?P<hostname>\S+)\s+(?P<port>\S+)\s+\d+"
         match = re.findall(re_lldp, output, re.M)
         for neighbor in match:
-            local_iface = neighbor[0]
-            if local_iface not in results:
-                results[local_iface] = []
+            local_intf = neighbor[0]
+            if local_intf not in results:
+                results[local_intf] = []
 
             neighbor_dict = dict()
-            neighbor_dict['port'] = py23_compat.text_type(neighbor[1])
-            neighbor_dict['hostname'] = py23_compat.text_type(neighbor[2])
-            results[local_iface].append(neighbor_dict)
+            neighbor_dict['hostname'] = py23_compat.text_type(neighbor[1])
+            neighbor_dict['port'] = py23_compat.text_type(neighbor[2])
+            results[local_intf].append(neighbor_dict)
         return results
 
     # develop
@@ -794,18 +807,6 @@ class VRPDriver(NetworkDriver):
 
         Sample output:
         {
-        'TenGigE0/0/0/8': [
-            {
-                'parent_interface': u'Bundle-Ether8',
-                'remote_chassis_id': u'8c60.4f69.e96c',
-                'remote_system_name': u'switch',
-                'remote_port': u'Eth2/2/1',
-                'remote_port_description': u'Ethernet2/2/1',
-                'remote_system_description': u'''huawei os''',
-                'remote_system_capab': u'B, R',
-                'remote_system_enable_capab': u'B'
-            }
-        ]
         }
         """
         lldp_neighbors = {}

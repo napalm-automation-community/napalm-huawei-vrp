@@ -68,3 +68,4 @@ TestVRP.ipynb
 napalm_vrp/ce.py
 test/test.py
 test/test_pypi.py
+test.py
