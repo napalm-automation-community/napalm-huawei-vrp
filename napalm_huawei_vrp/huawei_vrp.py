@@ -786,7 +786,7 @@ class VRPDriver(NetworkDriver):
         results = {}
         command = 'display lldp neighbor brief'
         output = self.device.send_command(command)
-        re_lldp = r"(?P<local>\S+)\s+(?P<hostname>\S+)\s+(?P<port>\S+)\s+\d+"
+        re_lldp = r"(?P<local>\S+)\s+(?P<hostname>\S+)\s+(?P<port>\S+)\s+\d+\s+"
         match = re.findall(re_lldp, output, re.M)
         for neighbor in match:
             local_intf = neighbor[0]
