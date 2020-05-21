@@ -11,7 +11,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="napalm-huawei-vrp",
-    version="0.1.4",
+    version="0.1.5",
     packages=find_packages(),
     author="Locus Li",
     author_email="locus@byto.top",
@@ -21,12 +21,13 @@ setup(
 
     classifiers=[
         'Topic :: Utilities',
-         'Programming Language :: Python',
-         'Programming Language :: Python :: 3',
-         'Programming Language :: Python :: 3.6',
-         'Programming Language :: Python :: 3.7',
-         'Operating System :: POSIX :: Linux',
-         'Operating System :: MacOS',
+        'Programming Language :: Python2',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Operating System :: POSIX :: Linux',
+        'Operating System :: MacOS',
     ],
     url="https://github.com/napalm-automation-community/napalm-huawei-vrp",
     include_package_data=True,
