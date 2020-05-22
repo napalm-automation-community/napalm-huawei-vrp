@@ -980,50 +980,125 @@ class VRPDriver(NetworkDriver):
     def get_ipv6_neighbors_table(self):
         pass
 
-    # develop
+    # ok
     def get_ntp_peers(self):
         """
-        Return the NTP peers configuration as dictionary.
+        Return the NTP peers configuration as list of dictionaries.
 
         Sample output:
-        {
-            '192.168.0.1': {},
-            '17.72.148.53': {},
-            '37.187.56.220': {},
-            '162.158.20.18': {}
-        }
+        [
+           {
+                'clock source': '172.22.81.11',
+                'clock stratum': 2,
+                'clock status': 'configured, master, sane, valid',
+                'reference clock id': '172.27.116.16',
+                'reach': '255',
+                'current poll': '64',
+                'now': '33',
+                'offset': '-283.6776 ms',
+                'delay': '2.18 ms',
+                'disper': '1.41 ms'
+            }
+        ]
         """
-        ntp_server = {}
-        # command = "display ntp session"
-        # output = self.device.send_command(command)
-        return ntp_server
+        ntp_peer = []
+        command = "display ntp session"
+        output = self.device.send_command(command)
+        re_ntp = r"clock source:\s+(?P<clock_source>\S+)$\n.*"\
+                 r"clock stratum:\s+(?P<clock_strat>\S+)$\n.*"\
+                 r"clock status:\s+(?P<sync_status>.+)$\n.*"\
+                 r"reference clock ID:\s(?P<ntp_ref_id>\S+)$\n.*"\
+                 r"reach:\s(?P<reach>\S+)$\n.*"\
+                 r"current poll:\s(?P<cur_poll>\S+)$\n.*"\
+                 r"now:\s(?P<now>\S+)$\n.*"\
+                 r"offset:\s(?P<offset>.+)$\n.*"\
+                 r"delay:\s(?P<delay>.+)$\n.*"\
+                 r"disper:\s(?P<disper>.+)$"
 
-    # develop
+        match = re.findall(re_ntp, output, re.MULTILINE)
+        for ntp_info in match:
+            ntp_dict = {
+                'clock source': ntp_info[0],
+                'clock stratum': int(ntp_info[1]),
+                'clock status': ntp_info[2],
+                'reference clock id': ntp_info[3],
+                'reach': ntp_info[4],
+                'current poll': ntp_info[5],
+                'now': ntp_info[6],
+                'offset': ntp_info[7],
+                'delay': ntp_info[8],
+                'disper': ntp_info[9]
+            }
+            ntp_peer.append(ntp_dict)
+        return ntp_peer
+    # ok
     def get_ntp_servers(self):
         """
-        Return the NTP servers configuration as dictionary.
+        Return the NTP active servers status as a list of dictionaries.
+
+        Sample output:
+        [
+           {
+                'server': '172.22.81.11',
+                'clock stratum': 2,
+                'offset': '0.0000 s',
+                'synch distanc': '0.012'
+            }
+        ]
+        """
+        ntp_server = []
+        command = "display ntp trace"
+        output = self.device.send_command(command)
+        re_ntp = r"server\s+(?P<ntp_server>\S+),.*"\
+                 r"stratum\s+(?P<clock_strat>\S+),\s*"\
+                 r"offset\s+(?P<offset>.+),\s.*"\
+                 r"synch distance\s(?P<synch_distance>\S+)"
+
+        match = re.findall(re_ntp, output, re.MULTILINE)
+
+        for ntp_info in match:
+            ntp_dict = {
+                'server': ntp_info[0],
+                'clock stratum': int(ntp_info[1]),
+                'offset': ntp_info[2],
+                'synch distanc': ntp_info[3]
+            }
+            ntp_server.append(ntp_dict)
+        return ntp_server
+
+    # ok
+    def get_ntp_stats(self):
+        """
+        Return the NTP Status as dictionary.
 
         Sample output:
         {
-            '192.168.0.1': {},
-            '17.72.148.53': {},
-            '37.187.56.220': {},
-            '162.158.20.18': {}
+            'clock_status': 'unsynchronized',
+            'clock_stratum': 16,
+            'ntp_reference_id': 'none',
+            'reference_time': '00:00:00.000 UTC Jan 1 1900(00000000.00000000)'
         }
         """
-        ntp_server = {}
-        # command = "display ntp trace"
-        # output = self.device.send_command(command)
-        return ntp_server
-
-    # develop
-    def get_ntp_stats(self):
-        ntp_stats = []
-        # command = "display ntp status"
-        # output = self.device.send_command(command)
+        ntp_stats = {}
+        command = "display ntp status"
+        output = self.device.send_command(command)
+        re_ntp = r"clock status:\s+(?P<sync_status>\S+).*"\
+                 r"clock stratum:\s+(?P<clock_strat>\S+).*"\
+                 r"reference clock ID:\s(?P<ntp_ref_id>\S+).*"\
+                 r"reference time:\s(?P<ref_time>.+\))"
+        match = re.search(re_ntp, output, re.DOTALL)
+        if match is None:
+            msg = "No Match Found"
+            raise ValueError(msg)
+        else:
+            ntp_dict = {
+                'clock_status': match.group('sync_status'),
+                'clock_stratum': int(match.group('clock_strat')),
+                'ntp_reference_id': match.group('ntp_ref_id'),
+                'reference_time': match.group('ref_time')
+                 }
+        ntp_stats.update(ntp_dict)
         return ntp_stats
-
-
 
     @staticmethod
     def _separate_section(separator, content):
