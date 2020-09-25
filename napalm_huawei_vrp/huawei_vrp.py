@@ -42,11 +42,27 @@ import uuid
 import hashlib
 
 # Easier to store these as constants
-HOUR_SECONDS = 3600
+MINUTE_SECONDS = 60
+HOUR_SECONDS = 60 * MINUTE_SECONDS
 DAY_SECONDS = 24 * HOUR_SECONDS
 WEEK_SECONDS = 7 * DAY_SECONDS
 YEAR_SECONDS = 365 * DAY_SECONDS
 
+# From napalm/ios/ios.py
+# STD REGEX PATTERNS
+IP_ADDR_REGEX = r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"
+IPV4_ADDR_REGEX = IP_ADDR_REGEX
+IPV6_ADDR_REGEX_1 = r"::"
+IPV6_ADDR_REGEX_2 = r"[0-9a-fA-F:]{1,39}::[0-9a-fA-F:]{1,39}"
+IPV6_ADDR_REGEX_3 = (
+    r"[0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}:"
+    "[0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}"
+)
+# Should validate IPv6 address using an IP address library after matching with this regex
+IPV6_ADDR_REGEX = "(?:{}|{}|{})".format(
+    IPV6_ADDR_REGEX_1, IPV6_ADDR_REGEX_2, IPV6_ADDR_REGEX_3
+)
+ASN_REGEX = r"[\d\.]+"
 
 class VRPDriver(NetworkDriver):
     """Napalm driver for Huawei vrp."""
@@ -1023,8 +1039,243 @@ class VRPDriver(NetworkDriver):
         # output = self.device.send_command(command)
         return ntp_stats
 
+    @staticmethod
+    def bgp_time_conversion(bgp_uptime):
+        """
+        Convert string time to seconds.
 
+        Based on napalm/ios/ios.py
 
+        Examples:
+        00h02m14s
+        29d22h55m34s
+        """
+
+        bgp_uptime = bgp_uptime.strip()
+        uptime_letters = set(["d", "h", "m", "s"])
+
+        if uptime_letters & set(bgp_uptime):
+            m = re.search(
+                r"(?:(?P<days>\d+)d)?"
+                r"(?P<hours>\d+)h"
+                r"(?P<minutes>\d+)m"
+                r"(?P<seconds>\d+)s",
+                bgp_uptime
+            )
+            if m:
+                if m.group('days'):
+                    days = int(m.group('days'))
+                else:
+                    days = 0
+
+                hours = int(m.group('hours'))
+                minutes = int(m.group('minutes'))
+                seconds = int(m.group('seconds'))
+                return (days * DAY_SECONDS) + (hours * HOUR_SECONDS) + (minutes * MINUTE_SECONDS) + seconds
+            else:
+                return -1
+        else:
+            return -1
+        raise ValueError(
+            "Unexpected value for BGP uptime string: {}".format(bgp_uptime)
+        )
+        
+    def get_bgp_neighbors(self):
+        bgp_neighbor_data = {}  # Will be returned from the function
+
+        # Check if BGP is running or not
+        bgp_not_running = ["Unrecognized command"]
+        check_bgp = self.device.send_command("display bgp network")
+        if any((s in check_bgp for s in bgp_not_running)):
+            return {}
+
+        # Loop through the raw output of 'display bgp peer', parse the Router ID and Local ASN and create
+        # the 'global' VRF (we assume all neighbors are part of that). If neighbors are found then add them
+        # to the VRF so they can be looped over later and more data extracted.
+
+        for afi in ["ipv4", "ipv6"]:
+            local_asn = None
+            summary_output = self.device.send_command("display bgp %s peer" % afi.replace("ipv4", "")).strip()
+
+            for line in summary_output.splitlines():
+                # Assume the same Router ID and Local ASN for the 'global' VRF (regardless of AFI)
+                m = re.match(r"^.*BGP local router ID : (?P<router_id>{})".format(IPV4_ADDR_REGEX), line)
+                if m:
+                    # Add the 'global' VRF
+                    if "global" not in bgp_neighbor_data:
+                        bgp_neighbor_data['global'] = {}
+                        bgp_neighbor_data['global']['router_id'] = napalm.base.helpers.ip(m.group('router_id'), version=4)
+                        bgp_neighbor_data['global']['peers'] = {}
+
+                m = re.match(r"\s+Local AS number : (?P<local_as>{})".format(ASN_REGEX), line)
+                if m:
+                    local_asn = napalm.base.helpers.as_number(m.group('local_as'))
+
+                # Look for neighbors and add them
+                m = re.match("^\s+?(?P<remote_addr>({})|({}))".format(IPV4_ADDR_REGEX, IPV6_ADDR_REGEX), line)
+                if m:
+                    remote_addr = napalm.base.helpers.ip(m.group('remote_addr'))
+                    if remote_addr not in bgp_neighbor_data['global']['peers']:
+                        bgp_neighbor_data['global']['peers'][remote_addr] = {}
+                        bgp_neighbor_data['global']['peers'][remote_addr]['local_as'] = local_asn
+                        bgp_neighbor_data['global']['peers'][remote_addr]['address_family'] = {}
+                        bgp_neighbor_data['global']['peers'][remote_addr]['address_family'][afi] = {}
+                    else:
+                        bgp_neighbor_data['global']['peers'][remote_addr]['address_family'][afi] = {}
+
+        for afi in ["vpnv4", "vpnv6"]:
+            local_asn = None
+            found_vrf = False
+            vrf = 'global'
+            summary_output = self.device.send_command("display bgp %s all peer" % afi).strip()
+
+            for line in summary_output.splitlines():
+                # Add the 'global' VRF if it doesn't already exist
+                m = re.match(r"^.*BGP local router ID : (?P<router_id>{})".format(IPV4_ADDR_REGEX), line)
+                if m and "global" not in bgp_neighbor_data:
+                    bgp_neighbor_data['global'] = {}
+                    bgp_neighbor_data['global']['router_id'] = napalm.base.helpers.ip(m.group('router_id'), version=4)
+                    bgp_neighbor_data['global']['peers'] = {}
+
+                m = re.match(r"\s+Local AS number : (?P<local_as>{})".format(ASN_REGEX), line)
+                if m:
+                    local_asn = napalm.base.helpers.as_number(m.group('local_as'))
+
+                # Look for neighbors. Start in the 'global' VRF and if we find new VRFs they should be added along
+                # with the neighbors in that VRF.
+                m = re.match("^\s+?(?P<remote_addr>({})|({}))".format(IPV4_ADDR_REGEX, IPV6_ADDR_REGEX), line)
+                if m:
+                    remote_addr = napalm.base.helpers.ip(m.group('remote_addr'))
+                    if remote_addr not in bgp_neighbor_data['global']['peers']:
+                        bgp_neighbor_data[vrf]['peers'][remote_addr] = {}
+                        bgp_neighbor_data[vrf]['peers'][remote_addr]['local_as'] = local_asn
+                        bgp_neighbor_data[vrf]['peers'][remote_addr]['address_family'] = {}
+                        bgp_neighbor_data[vrf]['peers'][remote_addr]['address_family'][afi] = {}
+                    else:
+                        bgp_neighbor_data[vrf]['peers'][remote_addr]['address_family'][afi] = {}
+
+                m = re.match(r"\s+VPN-Instance (?P<vrf>\S+)?, Router ID (?P<vrf_router_id>{}):".format(IPV4_ADDR_REGEX), line)
+                if m:
+                    # Create a new VRF
+                    vrf = m.group('vrf')
+                    bgp_neighbor_data[vrf] = {}
+                    bgp_neighbor_data[vrf]['router_id'] = napalm.base.helpers.ip(m.group('vrf_router_id'), version=4)
+                    bgp_neighbor_data[vrf]['peers'] = {}
+                    found_vrf = True
+
+        # Now we have hopefully found all configured BGP neighbors. Next step is to loop through them all
+        # and parse out the more detailed data we want.
+        # This way of parsing the data is from napalm/ios/ios.py
+
+        parse_neighbors = {
+            "patterns": [
+                {
+                    "regexp": re.compile(
+                        r"\s+BGP Peer is (({})|({})),"
+                        r"\s+remote AS (?P<remote_as>{}).*".format(
+                            IPV4_ADDR_REGEX, IPV6_ADDR_REGEX, ASN_REGEX
+                        )
+                    ),
+                },
+                {
+                    "regexp": re.compile(r".*Peer's description: \"(?P<description>.+)\""),
+                },
+                {
+                    "regexp": re.compile(
+                        r"^\s+BGP version \d+, Remote router ID "
+                        r"(?P<remote_id>{})".format(IPV4_ADDR_REGEX)
+                    ),
+                },
+                {
+                    "regexp": re.compile(r"^\s+BGP current state: (?P<state>[A-Z-a-z()]+)(?:, Up for (?P<uptime>\w+))?"),
+                },
+                {
+                    "regexp": re.compile(r".*Established, Up for (?P<uptime>.+)"),
+                },
+                {
+                    "regexp": re.compile(r"\s+Received total routes: (?P<received_prefixes>\d+)"),
+                },
+                {
+                    "regexp": re.compile(r"\s+Received active routes total: (?P<accepted_prefixes>\d+)"),
+                },
+                {
+                    "regexp": re.compile(r"\s+Advertised total routes: (?P<sent_prefixes>\d+)"),
+                },
+            ],
+            # Data from previous neighbor can "bleed over" to the current neighbor being parsed. Delete fields
+            # in this list to make sure it doesn't happen.
+            "no_fill_fields": [
+                "accepted_prefixes",
+            ],
+        }
+
+        for vrf in bgp_neighbor_data:
+            for remote_addr in bgp_neighbor_data[vrf]['peers']:
+                for afi in bgp_neighbor_data[vrf]['peers'][remote_addr]['address_family']:
+                    if vrf == 'global' and afi in ["ipv4", "ipv6"]:
+                        if afi == "ipv4":
+                            neighbor_output = self.device.send_command("display bgp peer %s verbose" % remote_addr)
+                        elif afi == "ipv6":
+                            neighbor_output = self.device.send_command("display bgp ipv6 peer %s verbose" % remote_addr)
+                    elif vrf == 'global' and afi in ["vpnv4", "vpnv6"]:
+                        neighbor_output = self.device.send_command("display bgp %s all peer %s verbose" % (afi, remote_addr))
+                    else:
+                        neighbor_output = self.device.send_command("display bgp %s vpn-instance %s peer %s verbose" % (afi, vrf, remote_addr))
+
+                    tmp_data = {}
+                    for line in neighbor_output.splitlines():
+                        for item in parse_neighbors["patterns"]:
+                            match = item["regexp"].match(line)
+                            if match:
+                                tmp_data.update(match.groupdict())
+                                break
+
+                    # Sanitize the values and update the appropriate neighbor
+                    # Lots of this code is from napalm/ios/ios.py
+
+                    # BGP is up if state is Established
+                    is_up = "Established" in tmp_data['state']
+
+                    # check for admin down state
+                    try:
+                        if "(Admin)" in tmp_data["state"]:
+                            is_enabled = False
+                        else:
+                            is_enabled = True
+                    except KeyError:
+                        is_enabled = True
+
+                    # Only parse neighbor detailed data if BGP session is up
+                    if is_up:
+                        received_prefixes = int(tmp_data['received_prefixes'])
+                        accepted_prefixes = int(tmp_data['accepted_prefixes'])
+                        sent_prefixes = int(tmp_data['sent_prefixes'])
+
+                        uptime = self.bgp_time_conversion(tmp_data['uptime'])
+                    else:
+                        received_prefixes = -1
+                        accepted_prefixes = -1
+                        sent_prefixes = -1
+                        uptime = -1
+
+                    # get description
+                    try:
+                        description = str(tmp_data["description"])
+                    except KeyError:
+                        description = ""
+
+                    bgp_neighbor_data[vrf]['peers'][remote_addr]['remote_as'] = napalm.base.helpers.as_number(tmp_data['remote_as'])
+                    bgp_neighbor_data[vrf]['peers'][remote_addr]['remote_id'] = napalm.base.helpers.ip(tmp_data['remote_id'], version=4)
+                    bgp_neighbor_data[vrf]['peers'][remote_addr]['is_up'] = is_up
+                    bgp_neighbor_data[vrf]['peers'][remote_addr]['is_enabled'] = is_enabled
+                    bgp_neighbor_data[vrf]['peers'][remote_addr]['description'] = description
+                    bgp_neighbor_data[vrf]['peers'][remote_addr]['uptime'] = uptime
+                    bgp_neighbor_data[vrf]['peers'][remote_addr]['address_family'][afi]['received_prefixes'] = received_prefixes
+                    bgp_neighbor_data[vrf]['peers'][remote_addr]['address_family'][afi]['accepted_prefixes'] = accepted_prefixes
+                    bgp_neighbor_data[vrf]['peers'][remote_addr]['address_family'][afi]['sent_prefixes'] = sent_prefixes
+
+        return bgp_neighbor_data
+        
     @staticmethod
     def _separate_section(separator, content):
         if content == "":
