@@ -19,33 +19,47 @@ Napalm driver for huawei Enterprise switch, community.
 Read https://napalm.readthedocs.io for more information.
 """
 
-from napalm.base import NetworkDriver
-import napalm.base.helpers
-from napalm.base.utils import py23_compat
-from napalm.base.netmiko_helpers import netmiko_args
-import napalm.base.constants as c
-from napalm.base.exceptions import (
-    MergeConfigException,
-    ReplaceConfigException,
-    CommandErrorException,
-    CommitError,
-)
-
-from datetime import datetime
-import socket
-import re
-import telnetlib
-import os
-import tempfile
-import paramiko
-import uuid
 import hashlib
+import os
+import re
+import socket
+import telnetlib
+import tempfile
+import uuid
+import copy
+from datetime import datetime
+
+import napalm.base.constants as c
+import napalm.base.helpers
+import paramiko
+from napalm.base import NetworkDriver
+from napalm.base.exceptions import (CommandErrorException, CommitError,
+                                    MergeConfigException,
+                                    ReplaceConfigException)
+from napalm.base.netmiko_helpers import netmiko_args
+from napalm.base.utils import py23_compat
 
 # Easier to store these as constants
 HOUR_SECONDS = 3600
 DAY_SECONDS = 24 * HOUR_SECONDS
 WEEK_SECONDS = 7 * DAY_SECONDS
 YEAR_SECONDS = 365 * DAY_SECONDS
+
+# 
+IP_ADDR_REGEX = r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"
+IPV4_ADDR_REGEX = IP_ADDR_REGEX
+IPV6_ADDR_REGEX_1 = r"::"
+IPV6_ADDR_REGEX_2 = r"[0-9a-fA-F:]{1,39}::[0-9a-fA-F:]{1,39}"
+IPV6_ADDR_REGEX_3 = (
+    r"[0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}:"
+    "[0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}"
+)
+# Should validate IPv6 address using an IP address library after matching with this regex
+IPV6_ADDR_REGEX = "(?:{}|{}|{})".format(
+    IPV6_ADDR_REGEX_1, IPV6_ADDR_REGEX_2, IPV6_ADDR_REGEX_3
+)
+# Period needed for 32-bit AS Numbers
+ASN_REGEX = r"[\d\.]+"
 
 
 class VRPDriver(NetworkDriver):
@@ -1024,6 +1038,435 @@ class VRPDriver(NetworkDriver):
         return ntp_stats
 
 
+    def get_bgp_neighbors(self):
+        """BGP neighbor information.
+
+        Supports both IPv4 and IPv6. vrf aware
+        """
+        supported_afi = [
+            "Ipv4 Unicast",
+            "Ipv6 Unicast",
+            "Vpnv4 All",
+            "Vpnv6 All",
+        ]
+
+        bgp_neighbor_data = dict()
+        
+        # vrfs where bgp is configured
+        bgp_config_vrfs = []
+        # get summary output from device
+        cmd_bgp_all_sum = "display bgp all summary"
+        summary_output = self.device.send_command(cmd_bgp_all_sum).strip()
+
+        if "Error: Unrecognized command found" in summary_output:
+            raise CommandErrorException("BGP is not running on this device")
+        
+
+        # get neighbor output from device
+        neighbor_output = ""
+        for afi in supported_afi:
+            if afi in ["Ipv4 Unicast"]:
+                cmd_bgp_neighbor = "display bgp peer verbose"
+                # VRP doesn't identify AFI on neighbor detail - little help 
+                neighbor_output += "\nADDED-AFI: Ipv4 Unicast\n"
+                neighbor_output += self.device.send_command(cmd_bgp_neighbor).strip()
+                # trailing newline required for parsing
+                neighbor_output += "\n"
+            elif afi in ["Ipv6 Unicast"]:
+                cmd_bgp_neighbor = "display bgp ipv6 peer verbose"
+                neighbor_output += "\nADDED-AFI: Ipv6 Unicast\n"
+                neighbor_output += self.device.send_command(cmd_bgp_neighbor).strip()
+                # trailing newline required for parsing
+                neighbor_output += "\n"
+            elif afi in ["Vpnv4 All"]:
+                cmd_bgp_neighbor = "display bgp vpnv4 all peer verbose"
+                neighbor_output += "\nADDED-AFI: Vpnv4 All\n"
+                neighbor_output += self.device.send_command(cmd_bgp_neighbor).strip()
+                # trailing newline required for parsing
+                neighbor_output += "\n"
+            elif afi in ["Vpnv6 All"]:
+                cmd_bgp_neighbor = "display bgp vpnv6 all peer verbose"
+                neighbor_output += "\nADDED-AFI: Vpnv6 All\n"
+                neighbor_output += self.device.send_command(cmd_bgp_neighbor).strip()
+                # trailing newline required for parsing
+                neighbor_output += "\n"       
+
+        # Regular expressions used for parsing BGP summary
+        parse_summary = {
+            "patterns": [
+                # Capture router_id value, e.g.:
+                #  BGP local router ID : 200.189.189.189
+                {
+                    "regexp": re.compile(
+                        r"^\s*BGP local router ID : (?P<router_id>{})".format(
+                            IPV4_ADDR_REGEX
+                        )
+                    ),
+                    "record": False,
+                },
+                # Capture local_as values, e.g.:
+                #  Local AS number : 65535
+                {
+                    "regexp": re.compile(
+                        r"^ Local AS number :? (?P<local_as>{})".format(
+                             ASN_REGEX
+                        )
+                    ),
+                    "record": False,
+                },
+                # For address family: IPv4 Unicast
+                # variable afi contains both afi and safi, i.e 'IPv4 Unicast'
+                {
+                    "regexp": re.compile(r"^ Address Family:(?P<afi>[\S ]+)$"),
+                    "record": False,
+                },
+                # Capture VPN-INSTANCE
+                # VPN-Instance TRANSITOS, Router ID 200.189.63.178:
+                {
+                    "regexp": re.compile(
+                        r"^\s*VPN-Instance\s+(?P<vrf>\S+),"
+                        r"\s+Router ID\s+(?P<router_id>{})".format(
+                            IPV4_ADDR_REGEX
+                        )
+                    ),
+                    "record": False,
+                },
+                # Capture the init of peers (when not using VRF this is the global vrf)
+                # Peer                     AS  MsgRcvd  MsgSent
+                # {
+                #     "regexp": re.compile(r"^\s+Peer\s+AS\s+MsgRcvd.*"),
+                #     "record": True,
+                # },
+                # Match neighbor summary row, capturing useful details and
+                # discarding the 5 columns that we don't care about, e.g.:
+                #   Peer                     AS  MsgRcvd  MsgSent  OutQ  Up/Down       State    RtRcv    RtAdv
+                #   200.219.141.254       26162  8880810    34058     0 0461h47m Established    10535      156
+                {
+                    "regexp": re.compile(
+                        r"\s*(?P<remote_addr>({})|({}))"
+                        r"\s+(?P<remote_as>{})(\s+\S+){{3}}\s+"
+                        r"(?P<uptime>(never)|\d+\S+)"
+                        r"\s+(?P<state>\S+)"
+                        r"\s+(?P<received_prefixes>\d+)"
+                        r"\s+(?P<sent_prefixes>\d+)".format(
+                            IPV4_ADDR_REGEX, IPV6_ADDR_REGEX, ASN_REGEX
+                        )
+                    ),
+                    "record": True,
+                },
+            ],
+            "no_fill_fields": [
+               "received_prefixes",
+               "sent_prefixes",
+               "state",
+               "uptime",
+               "remote_as",
+               "remote_addr",
+            ],
+        }
+
+        parse_neighbors = {
+            "patterns": [
+                # Capture VRF
+                {
+                    "regexp": re.compile(
+                        r"\s*IPv[46]-family for VPN instance:\s+(?P<vrf>\S+)"
+                    ),
+                    "record": False,
+                },
+                # Capture AFI
+                {
+                    "regexp": re.compile(
+                        r"\s*ADDED-AFI:\s+(?P<afi>.+)"
+                    ),
+                    "record": False,
+                },
+                # Capture BGP Peer is 2804:2898:F000:572::2,  remote AS 26283
+                {
+                    "regexp": re.compile(
+                        r"^\s*BGP Peer is (?P<remote_addr>({})|({})),"
+                        r"\s+remote AS (?P<remote_as>{}).*".format(
+                            IPV4_ADDR_REGEX, IPV6_ADDR_REGEX, ASN_REGEX
+                        )
+                    ),
+                    "record": False,
+                },
+                # Capture description
+                {
+                    "regexp": re.compile(r"^\s+Peer's description: (?P<description>.+)"),
+                    "record": False,
+                },
+                # Capture remote_id, e.g.:
+                # BGP version 4, remote router ID 10.0.1.2
+                {
+                    "regexp": re.compile(
+                        r"^\s+BGP version \d+, Remote router ID "
+                        r"(?P<remote_id>{})".format(IPV4_ADDR_REGEX)
+                    ),
+                    "record": False,
+                },
+                # Capture state
+                {
+                    "regexp": re.compile(r"^\s+BGP current state: (?P<state>\w+).*"),
+                    "record": False,
+                },
+                # Capture received routes
+                #     Received total routes: 1
+                {
+                    "regexp": re.compile(
+                        r"^\s+Received total routes:\s+(?P<received_prefixes>\d+)"
+                    ),
+                    "record": False,
+                },
+                # Capture accepted routes
+                #     Received active routes total: 0
+                {
+                    "regexp": re.compile(
+                        r"^\s+Received active routes total:\s+(?P<accepted_prefixes>\d+)"
+                    ),
+                    "record": False,
+                },
+                # Capture Advertised routes
+                #     Advertised total routes: 115385
+                {
+                    "regexp": re.compile(
+                        r"^\s+Advertised total routes:\s+(?P<sent_prefixes>\S+)"
+                    ),
+                    "record": False,
+                },
+                # Capture Import route policy
+                #    Import route policy is: PEERING-PTT-SPO-IN
+                {
+                    "regexp": re.compile(
+                        r"^\s+Import route policy is:\s+(?P<import_route_policy>\S+)"
+                    ),
+                    "record": False,
+                },
+                # Capture Export route policy
+                #    Export route policy is: PEERING-PTT-SPO-IN
+                {
+                    "regexp": re.compile(
+                        r"^\s+Export route policy is:\s+(?P<export_route_policy>\S+)"
+                    ),
+                    "record": True,
+                },
+            ],
+            # fields that should not be "filled down" across table rows
+            "no_fill_fields": [
+                "received_prefixes",
+                "accepted_prefixes",
+                "sent_prefixes",
+                "import_route_policy",
+                "export_route_policy",
+            ],
+        }
+
+        # Parse outputs into a list of dicts
+        summary_data = []
+        summary_data_entry = {}
+
+        for line in summary_output.splitlines():
+            # check for matches against each pattern
+            for item in parse_summary["patterns"]:
+                match = item["regexp"].match(line)
+                # print("Casando a linha #{}#".format(line))
+                if match:
+                    # a match was found, so update the temp entry with the match's groupdict
+                    summary_data_entry.update(match.groupdict())
+                    # print("Casou #{}#".format(match.groupdict()))
+                    if item["record"]:
+                        # Record indicates the last piece of data has been obtained; move
+                        # on to next entry
+                        summary_data.append(copy.deepcopy(summary_data_entry))
+                        # remove keys that are listed in no_fill_fields before the next pass
+                        for field in parse_summary["no_fill_fields"]:
+                            try:
+                                del summary_data_entry[field]
+                            except KeyError:
+                                pass
+                    break
+
+
+        neighbor_data = []
+        neighbor_data_entry = {}
+        for line in neighbor_output.splitlines():
+            # check for matches against each pattern
+            for item in parse_neighbors["patterns"]:
+                match = item["regexp"].match(line)
+                if match:
+                    # a match was found, so update the temp entry with the match's groupdict
+                    neighbor_data_entry.update(match.groupdict())
+                    if item["record"]:
+                        # update list of vrfs where bgp is configured
+                        if 'vrf' not in neighbor_data_entry:
+                            vrf_to_add = "global"
+                        else:
+                            vrf_to_add = neighbor_data_entry["vrf"]
+                        if vrf_to_add not in bgp_config_vrfs:
+                            bgp_config_vrfs.append(vrf_to_add)
+                        # Record indicates the last piece of data has been obtained; move
+                        # on to next entry
+                        neighbor_data.append(copy.deepcopy(neighbor_data_entry))
+                        # remove keys that are listed in no_fill_fields before the next pass
+                        for field in parse_neighbors["no_fill_fields"]:
+                            try:
+                                del neighbor_data_entry[field]
+                            except KeyError:
+                                pass
+                    break
+
+
+        # In Huawei-VRP you can have different router-id for vpn-instance
+        # router_id = None
+
+        # for entry in summary_data:
+        #      if not router_id:
+        #          router_id = entry["router_id"]
+        #      elif entry["router_id"] != router_id:
+        #          raise ValueError
+
+        # # check the router_id looks like an ipv4 address
+        # router_id = napalm.base.helpers.ip(router_id, version=4)
+
+        # create dict keys for vrfs where bgp is configured
+        for vrf in bgp_config_vrfs:
+            bgp_neighbor_data[vrf] = {}
+            for entry in summary_data:
+                if 'vrf' in entry:
+                    if entry['vrf'] == vrf:
+                        bgp_neighbor_data[vrf]["router_id"] = entry["router_id"]
+                else:
+                    bgp_neighbor_data[vrf]["router_id"] = entry["router_id"]
+            bgp_neighbor_data[vrf]["peers"] = {}
+        
+        # print(summary_data)
+        # print(neighbor_data)
+        # return []
+
+        # add parsed data to output dict
+        for entry in summary_data:
+            remote_addr = napalm.base.helpers.ip(entry["remote_addr"])
+            afi = entry["afi"]
+            # check that we're looking at a supported afi
+            if afi not in supported_afi:
+                continue
+            # get neighbor_entry out of neighbor data
+            neighbor_entry = None
+            for neighbor in neighbor_data:
+                if (
+                    neighbor["afi"] == afi
+                    and napalm.base.helpers.ip(neighbor["remote_addr"]) == remote_addr
+                ):
+                    neighbor_entry = neighbor
+                    break
+            # check for proper session data for the afi
+            if neighbor_entry is None:
+                continue
+            elif not isinstance(neighbor_entry, dict):
+                raise ValueError(
+                    msg="Couldn't find neighbor data for %s in afi %s"
+                    % (remote_addr, afi)
+                )
+
+            # check for admin down state
+            try:
+                if "(Admin)" in entry["state"]:
+                    is_enabled = False
+                else:
+                    is_enabled = True
+            except KeyError:
+                is_enabled = True
+
+            # parse uptime value
+            uptime = self.bgp_time_conversion(entry["uptime"])
+
+            # BGP is up if state is Established
+            is_up = "Established" in neighbor_entry["state"]
+
+            # check whether session is up for address family and get prefix count
+            try:
+                accepted_prefixes = int(entry["accepted_prefixes"])
+            except (ValueError, KeyError):
+                accepted_prefixes = -1
+
+            # Only parse neighbor detailed data if BGP session is-up
+            if is_up:
+                try:
+                    # overide accepted_prefixes with neighbor data if possible (since that's newer)
+                    accepted_prefixes = int(neighbor_entry["accepted_prefixes"])
+                except (ValueError, KeyError):
+                    pass
+
+                # try to get received prefix count, otherwise set to accepted_prefixes
+                received_prefixes = neighbor_entry.get(
+                    "received_prefixes", accepted_prefixes
+                )
+
+                # try to get sent prefix count and convert to int, otherwise set to -1
+                sent_prefixes = int(neighbor_entry.get("sent_prefixes", -1))
+            else:
+                received_prefixes = -1
+                sent_prefixes = -1
+                uptime = -1
+
+            # get description
+            try:
+                description = py23_compat.text_type(neighbor_entry["description"])
+            except KeyError:
+                description = ""
+
+            # check the remote router_id looks like an ipv4 address
+            remote_id = napalm.base.helpers.ip(neighbor_entry["remote_id"], version=4)
+
+            # get vrf name, if None use 'global'
+            if 'vrf' in neighbor_entry:
+                vrf = neighbor_entry["vrf"]
+            else:
+                vrf = "global"
+
+            if remote_addr not in bgp_neighbor_data[vrf]["peers"]:
+                bgp_neighbor_data[vrf]["peers"][remote_addr] = {
+                    "local_as": napalm.base.helpers.as_number(entry["local_as"]),
+                    "remote_as": napalm.base.helpers.as_number(entry["remote_as"]),
+                    "remote_id": remote_id,
+                    "is_up": is_up,
+                    "is_enabled": is_enabled,
+                    "description": description,
+                    "uptime": uptime,
+                    "address_family": {
+                        afi: {
+                            "received_prefixes": received_prefixes,
+                            "accepted_prefixes": accepted_prefixes,
+                            "sent_prefixes": sent_prefixes,
+                        }
+                    },
+                }
+            else:
+                # found previous data for matching remote_addr, but for different afi
+                existing = bgp_neighbor_data[vrf]["peers"][remote_addr]
+                assert afi not in existing["address_family"]
+                # compare with existing values and croak if they don't match
+                assert existing["local_as"] == napalm.base.helpers.as_number(
+                    entry["local_as"]
+                )
+                assert existing["remote_as"] == napalm.base.helpers.as_number(
+                    entry["remote_as"]
+                )
+                assert existing["remote_id"] == remote_id
+                assert existing["is_enabled"] == is_enabled
+                assert existing["description"] == description
+                # merge other values in a sane manner
+                existing["is_up"] = existing["is_up"] or is_up
+                existing["uptime"] = max(existing["uptime"], uptime)
+                existing["address_family"][afi] = {
+                    "received_prefixes": received_prefixes,
+                    "accepted_prefixes": accepted_prefixes,
+                    "sent_prefixes": sent_prefixes,
+                }
+        return bgp_neighbor_data
+
+
+
 
     @staticmethod
     def _separate_section(separator, content):
@@ -1261,3 +1704,36 @@ class VRPDriver(NetworkDriver):
         with open(filename, 'wt') as fobj:
             fobj.write(config)
         return filename
+
+    @staticmethod
+    def bgp_time_conversion(bgp_uptime):
+        """
+        Convert string time to seconds.
+
+        Examples
+        22:22:29
+        00:01:06
+        0088h47m
+        0064h44m
+        """
+        bgp_uptime = bgp_uptime.strip()
+        uptime_letters = set(["h", "m"])
+
+        if "never" in bgp_uptime:
+            return -1
+        elif ":" in bgp_uptime:
+            times = bgp_uptime.split(":")
+            times = [int(x) for x in times]
+            hours, minutes, seconds = times
+            return (hours * 3600) + (minutes * 60) + seconds
+        # Check if any letters 'h', 'm' are in the time string
+        elif uptime_letters & set(bgp_uptime):
+            form1 = r"(\d+)h(\d+)m"  # 0064h44m
+            match = re.search(form1, bgp_uptime)
+            if match:
+                hours = int(match.group(1))
+                minutes = int(match.group(2))
+                return (hours * 3600) + (minutes * 60)
+        raise ValueError(
+            "Unexpected value for BGP uptime string: {}".format(bgp_uptime)
+        )
