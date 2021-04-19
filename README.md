@@ -3,7 +3,7 @@
 
 # napalm-huawei-vrp [中文版](README-ZH.md)
 
-NAPALM driver for HUAWEI Campus Network Switch, support the S5700,S6700 etc. 
+NAPALM driver for HUAWEI Campus Network Switch, support the S5700,S6700 etc.
 
 
 ## Instructions
@@ -29,6 +29,7 @@ The driver is under development and iteration.
 |  get_interfaces()           |  Get interface information |
 |  get_interfaces_ip()        |  Get interface IP information  |
 |  get_interfaces_counters()  |  Get interface counters  |
+|  get_bgp_neighbors()        |  Get BGP neighbors information (VRF-aware) |
 
 ### Plans to develop
 
