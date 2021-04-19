@@ -4,7 +4,6 @@
 # napalm-huawei-vrp [中文版](README-ZH.md)
 
 NAPALM driver for HUAWEI Campus Network Switch, support the S5700,S6700 etc. 
-I'm trying to add support to NE8K routers.
 
 
 ## Instructions
