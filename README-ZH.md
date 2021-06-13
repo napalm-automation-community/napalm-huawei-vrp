@@ -10,11 +10,15 @@ NAPALM华为S系列园区网交换机驱动，支持S5700,S6700等.
 
 这个驱动目前支持以下功能
 
-* get_facts():  获取设备基础信息
+* load_merge_candidate(): 加载给定的配置文件
+* compare_config(): 比较加载的配置和当前运行配置
+* discard_config():删除加载的配置文件
+* commit_config():执行加载的配置文件到设备
+* get_facts(): 获取设备基础信息
 * cli(): 发送任何命令到设备中
 * get_lldp_neighbors(): 获取LLDP邻居信息
 * get_config(): 获取配置信息
-* is_active(): 设备是否可用
+* is_alive(): 返回连接状态的标志
 * ping(): 从设备中ping远端设备
 * get_arp_table(): 获取设备APR表
 * get_mac_address_table(): 获取设备MAC地址表
