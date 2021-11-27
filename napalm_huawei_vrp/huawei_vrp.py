@@ -21,7 +21,6 @@ Read https://napalm.readthedocs.io for more information.
 
 from napalm.base import NetworkDriver
 import napalm.base.helpers
-from napalm.base.utils import py23_compat
 from napalm.base.netmiko_helpers import netmiko_args
 import napalm.base.constants as c
 from napalm.base.exceptions import (
@@ -230,10 +229,10 @@ class VRPDriver(NetworkDriver):
         return {
             'uptime': int(uptime),
             'vendor': vendor,
-            'os_version': py23_compat.text_type(os_version),
+            'os_version': str(os_version),
             'serial_number': serial_number,
-            'model': py23_compat.text_type(model),
-            'hostname': py23_compat.text_type(hostname),
+            'model': str(model),
+            'hostname': str(hostname),
             'fqdn': fqdn,  # ? fqdn(fully qualified domain name)
             'interface_list': interface_list
         }
