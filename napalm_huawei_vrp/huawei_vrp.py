@@ -21,7 +21,6 @@ Read https://napalm.readthedocs.io for more information.
 
 from napalm.base import NetworkDriver
 import napalm.base.helpers
-from napalm.base.utils import py23_compat
 from napalm.base.netmiko_helpers import netmiko_args
 import napalm.base.constants as c
 from napalm.base.exceptions import (
@@ -29,6 +28,15 @@ from napalm.base.exceptions import (
     ReplaceConfigException,
     CommandErrorException,
     CommitError,
+)
+from napalm.base.helpers import (
+    canonical_interface_name,
+    transform_lldp_capab,
+    textfsm_extractor,
+    split_interface,
+    abbreviated_interface_name,
+    generate_regex_or,
+    sanitize_configs,
 )
 
 from datetime import datetime
@@ -230,10 +238,10 @@ class VRPDriver(NetworkDriver):
         return {
             'uptime': int(uptime),
             'vendor': vendor,
-            'os_version': py23_compat.text_type(os_version),
+            'os_version': str(os_version),
             'serial_number': serial_number,
-            'model': py23_compat.text_type(model),
-            'hostname': py23_compat.text_type(hostname),
+            'model': str(model),
+            'hostname': str(hostname),
             'fqdn': fqdn,  # ? fqdn(fully qualified domain name)
             'interface_list': interface_list
         }
@@ -353,10 +361,10 @@ class VRPDriver(NetworkDriver):
 
         if retrieve.lower() in ('running', 'all'):
             command = 'display current-configuration'
-            config['running'] = py23_compat.text_type(self.device.send_command(command))
+            config['running'] = str(self.device.send_command(command))
         if retrieve.lower() in ('startup', 'all'):
             # command = 'display saved-configuration last'
-            # config['startup'] = py23_compat.text_type(self.device.send_command(command))
+            # config['startup'] = str(self.device.send_command(command))
             pass
         return config
 
@@ -413,7 +421,7 @@ class VRPDriver(NetworkDriver):
                 results_array = []
                 match = re.findall(r"Reply from.+time=(\d+)", output, re.M)
                 for i in match:
-                    results_array.append({'ip_address': py23_compat.text_type(destination),
+                    results_array.append({'ip_address': str(destination),
                                           'rtt': float(i)})
                 ping_dict['success'].update({'results': results_array})
         return ping_dict
@@ -794,25 +802,76 @@ class VRPDriver(NetworkDriver):
                 results[local_intf] = []
 
             neighbor_dict = dict()
-            neighbor_dict['hostname'] = py23_compat.text_type(neighbor[1])
-            neighbor_dict['port'] = py23_compat.text_type(neighbor[2])
+            neighbor_dict['hostname'] = str(neighbor[1])
+            neighbor_dict['port'] = str(neighbor[2])
             results[local_intf].append(neighbor_dict)
         return results
 
-    # develop
+    # ok   
     def get_lldp_neighbors_detail(self, interface=""):
-        pass
-        """
-        Return a detailed view of the LLDP neighbors as a dictionary.
+        lldp = {}
+        lldp_interfaces = []
 
-        Sample output:
-        {
-        }
-        """
-        lldp_neighbors = {}
-        return lldp_neighbors
+        if interface:
+            command = "display lldp neighbor interface interface {}".format(interface)
+        else:
+            command = "display lldp neighbor"
+        lldp_entries = self.device.send_command(command)
+        lldp_entries = textfsm_extractor(
+            self, "show_lldp_neighbors_detail", lldp_entries
+        )
 
+        if len(lldp_entries) == 0:
+            return {}
+
+        # Older IOS versions don't have 'Local Intf' defined in LLDP detail.
+        # We need to get them from the non-detailed command
+        # which is in the same sequence as the detailed output
+        if not lldp_entries[0]["local_interface"]:
+            if interface:
+                command = "display lldp neighbor interface {}".format(interface)
+            else:
+                command = "display lldp neighbor brief"
+            
+            lldp_brief = self.device.send_command(command)
+            lldp_interfaces = textfsm_extractor(self, "show_lldp_neighbors", lldp_brief)
+            lldp_interfaces = [x["local_interface"] for x in lldp_interfaces]
+            if len(lldp_interfaces) != len(lldp_entries):
+                raise ValueError(
+                    "LLDP neighbor count has changed between commands. "
+                    "Interface: {}\nEntries: {}".format(lldp_interfaces, lldp_entries)
+                )
+
+        for idx, lldp_entry in enumerate(lldp_entries):
+            local_intf = lldp_entry.pop("local_interface") or lldp_interfaces[idx]
+            # Convert any 'not advertised' to an empty string
+            for field in lldp_entry:
+                if "not advertised" in lldp_entry[field]:
+                    lldp_entry[field] = ""
+            # Add field missing on IOS
+            lldp_entry["parent_interface"] = ""
+            # Translate the capability fields
+            if lldp_entry["remote_system_capab"] and isinstance(lldp_entry["remote_system_capab"], str):
+               lldp_entry["remote_system_capab"] = sorted(lldp_entry["remote_system_capab"].strip().lower().split(" "))
+            else:
+                return []
+            
+            if lldp_entry["remote_system_enable_capab"] and isinstance(lldp_entry["remote_system_enable_capab"], str):
+               lldp_entry["remote_system_enable_capab"] = sorted(lldp_entry["remote_system_enable_capab"].strip().lower().split(" "))
+            else:
+                return []
+
+            # Turn the interfaces into their long version
+            local_intf = canonical_interface_name(local_intf)
+            lldp.setdefault(local_intf, [])
+            lldp[local_intf].append(lldp_entry)
+
+        return lldp
     # ok
+    
+
+            
+    
     def get_arp_table(self, vrf=""):
         """
                 Get arp table information.
@@ -943,10 +1002,10 @@ class VRPDriver(NetworkDriver):
         # output = self.device.send_command(command)
 
         snmp_information = {
-            'contact': py23_compat.text_type(''),
-            'location': py23_compat.text_type(''),
+            'contact': str(''),
+            'location': str(''),
             'community': {},
-            'chassis_id': py23_compat.text_type('')
+            'chassis_id': str('')
         }
         return snmp_information
         pass
@@ -1256,7 +1315,7 @@ class VRPDriver(NetworkDriver):
     @staticmethod
     def _create_tmp_file(config):
         tmp_dir = tempfile.gettempdir()
-        rand_fname = py23_compat.text_type(uuid.uuid4())
+        rand_fname = str(uuid.uuid4())
         filename = os.path.join(tmp_dir, rand_fname)
         with open(filename, 'wt') as fobj:
             fobj.write(config)
