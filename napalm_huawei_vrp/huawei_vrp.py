@@ -866,12 +866,12 @@ class VRPDriver(NetworkDriver):
     # ok
     
     def transform_lldp_capaba(capabilities):
-    if capabilities and isinstance(capabilities, str):
-        capabilities = capabilities.lower().split(" ")
-        return sorted([for c in capabilities]
-        )
-    else:
-        return []
+        if capabilities and isinstance(capabilities, str):
+                capabilities = capabilities.lower().split(" ")
+                return sorted([for c in capabilities]
+                )
+            else:
+                return []
     
     def get_arp_table(self, vrf=""):
         """
