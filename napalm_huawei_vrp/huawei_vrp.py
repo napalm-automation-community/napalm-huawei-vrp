@@ -853,12 +853,12 @@ class VRPDriver(NetworkDriver):
             lldp_entry["parent_interface"] = ""
             # Translate the capability fields
             if lldp_entry["remote_system_capab"] and isinstance(lldp_entry["remote_system_capab"], str):
-               lldp_entry["remote_system_capab"] = sorted([lldp_entry["remote_system_capab"].lower().split(" ")])
+               lldp_entry["remote_system_capab"] = sorted([lldp_entry["remote_system_capab"].strip().lower().split(" ")])
             else:
                 return []
             
             if lldp_entry["remote_system_enable_capab"] and isinstance(lldp_entry["remote_system_enable_capab"], str):
-               lldp_entry["remote_system_enable_capab"] = sorted([lldp_entry["remote_system_enable_capab"].lower().split(" ")])
+               lldp_entry["remote_system_enable_capab"] = sorted([lldp_entry["remote_system_enable_capab"].strip().lower().split(" ")])
             else:
                 return []
 
