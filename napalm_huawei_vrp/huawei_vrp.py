@@ -872,6 +872,7 @@ class VRPDriver(NetworkDriver):
                 )
             else:
                 return []
+            
     
     def get_arp_table(self, vrf=""):
         """
