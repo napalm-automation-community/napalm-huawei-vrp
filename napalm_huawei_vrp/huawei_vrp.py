@@ -856,11 +856,12 @@ class VRPDriver(NetworkDriver):
                lldp_entry["remote_system_capab"] = sorted([lldp_entry["remote_system_capab"].lower().split(" ")])
             else:
                 return []
-          
+            
+            if lldp_entry["remote_system_enable_capab"] and isinstance(lldp_entry["remote_system_enable_capab"], str):
+               lldp_entry["remote_system_enable_capab"] = sorted([lldp_entry["remote_system_enable_capab"].lower().split(" ")])
+            else:
+                return []
 
-            lldp_entry["remote_system_enable_capab"] = transform_lldp_capaba(
-                lldp_entry["remote_system_enable_capab"]
-            )
             # Turn the interfaces into their long version
             local_intf = canonical_interface_name(local_intf)
             lldp.setdefault(local_intf, [])
