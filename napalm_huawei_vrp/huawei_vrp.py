@@ -868,8 +868,7 @@ class VRPDriver(NetworkDriver):
     def transform_lldp_capaba(capabilities):
         if capabilities and isinstance(capabilities, str):
                 capabilities = capabilities.lower().split(" ")
-                return sorted([for c in capabilities]
-                )
+                return sorted([capabilities])
             else:
                 return []
             
