@@ -799,17 +799,52 @@ class VRPDriver(NetworkDriver):
         return results
 
     # develop
-    def get_lldp_neighbors_detail(self, interface=""):
-        pass
+    def get_lldp_neighbors_detail(self):
         """
-        Return a detailed view of the LLDP neighbors as a dictionary.
+        Return LLDP neighbors brief info.
+
+        Sample input:
+            <device-vrp>dis lldp neighbor brief
+            Local Intf    Neighbor Dev          Neighbor Intf             Exptime(s)
+            XGE0/0/1      huawei-S5720-01       XGE0/0/1                  96
+            XGE0/0/3      huawei-S5720-POE      XGE0/0/1                  119
+            XGE0/0/46     Aruba-7210-M          GE0/0/2                   95
 
         Sample output:
         {
+            'XGE0/0/1': [
+                {
+                    'hostname': 'huawei-S5720-01',
+                    'port': 'XGE0/0/1'
+                },
+            'XGE0/0/3': [
+                {
+                    'hostname': 'huawei-S5720-POE',
+                    'port': 'XGE0/0/1'
+                },
+            'XGE0/0/46': [
+                {
+                    'hostname': 'Aruba-7210-M',
+                    'port': 'GE0/0/2'
+                },
+            ]
         }
         """
-        lldp_neighbors = {}
-        return lldp_neighbors
+        results = {}
+        command = 'display lldp neighbor brief'
+        output = self.device.send_command(command)
+        re_lldp = r"(?P<local>\S+)\s+(?P<hostname>\S+)\s+(?P<port>\S+)\s+\d+\s+"
+        match = re.findall(re_lldp, output, re.M)
+        for neighbor in match:
+            local_intf = neighbor[0]
+            if local_intf not in results:
+                results[local_intf] = []
+
+            neighbor_dict = dict()
+            neighbor_dict['hostname'] = str(neighbor[1])
+            neighbor_dict['port'] = str(neighbor[2])
+            results[local_intf].append(neighbor_dict)
+        return results
 
     # ok
     def get_arp_table(self, vrf=""):
