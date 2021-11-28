@@ -808,7 +808,7 @@ class VRPDriver(NetworkDriver):
         return results
 
     # develop
-   def get_lldp_neighbors_detail(self, interface=""):
+    def get_lldp_neighbors_detail(self, interface=""):
         lldp = {}
         lldp_interfaces = []
 
