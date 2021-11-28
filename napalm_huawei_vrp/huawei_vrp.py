@@ -813,9 +813,9 @@ class VRPDriver(NetworkDriver):
         lldp_interfaces = []
 
         if interface:
-            command = "display lldp neighbors {} detail".format(interface)
+            command = "display lldp neighbors interface ".format(interface)
         else:
-            command = "display lldp neighbors detail"
+            command = "display lldp neighbors"
         lldp_entries = self._send_command(command)
         lldp_entries = textfsm_extractor(
             self, "show_lldp_neighbors_detail", lldp_entries
@@ -829,7 +829,7 @@ class VRPDriver(NetworkDriver):
         # which is in the same sequence as the detailed output
         if not lldp_entries[0]["local_interface"]:
             if interface:
-                command = "display lldp neighbors {}".format(interface)
+                command = "display lldp neighbors ".format(interface)
             else:
                 command = "display lldp neighbors"
             lldp_brief = self._send_command(command)
