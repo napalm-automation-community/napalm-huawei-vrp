@@ -29,6 +29,15 @@ from napalm.base.exceptions import (
     CommandErrorException,
     CommitError,
 )
+from napalm.base.helpers import (
+    canonical_interface_name,
+    transform_lldp_capab,
+    textfsm_extractor,
+    split_interface,
+    abbreviated_interface_name,
+    generate_regex_or,
+    sanitize_configs,
+)
 
 from datetime import datetime
 import socket
@@ -799,53 +808,60 @@ class VRPDriver(NetworkDriver):
         return results
 
     # develop
-    def get_lldp_neighbors_detail(self):
-        """
-        Return LLDP neighbors brief info.
+   def get_lldp_neighbors_detail(self, interface=""):
+        lldp = {}
+        lldp_interfaces = []
 
-        Sample input:
-            <device-vrp>dis lldp neighbor brief
-            Local Intf    Neighbor Dev          Neighbor Intf             Exptime(s)
-            XGE0/0/1      huawei-S5720-01       XGE0/0/1                  96
-            XGE0/0/3      huawei-S5720-POE      XGE0/0/1                  119
-            XGE0/0/46     Aruba-7210-M          GE0/0/2                   95
+        if interface:
+            command = "show lldp neighbors {} detail".format(interface)
+        else:
+            command = "show lldp neighbors detail"
+        lldp_entries = self._send_command(command)
+        lldp_entries = textfsm_extractor(
+            self, "show_lldp_neighbors_detail", lldp_entries
+        )
 
-        Sample output:
-        {
-            'XGE0/0/1': [
-                {
-                    'hostname': 'huawei-S5720-01',
-                    'port': 'XGE0/0/1'
-                },
-            'XGE0/0/3': [
-                {
-                    'hostname': 'huawei-S5720-POE',
-                    'port': 'XGE0/0/1'
-                },
-            'XGE0/0/46': [
-                {
-                    'hostname': 'Aruba-7210-M',
-                    'port': 'GE0/0/2'
-                },
-            ]
-        }
-        """
-        results = {}
-        command = 'display lldp neighbor brief'
-        output = self.device.send_command(command)
-        re_lldp = r"(?P<local>\S+)\s+(?P<hostname>\S+)\s+(?P<port>\S+)\s+\d+\s+"
-        match = re.findall(re_lldp, output, re.M)
-        for neighbor in match:
-            local_intf = neighbor[0]
-            if local_intf not in results:
-                results[local_intf] = []
+        if len(lldp_entries) == 0:
+            return {}
 
-            neighbor_dict = dict()
-            neighbor_dict['hostname'] = str(neighbor[1])
-            neighbor_dict['port'] = str(neighbor[2])
-            results[local_intf].append(neighbor_dict)
-        return results
+        # Older IOS versions don't have 'Local Intf' defined in LLDP detail.
+        # We need to get them from the non-detailed command
+        # which is in the same sequence as the detailed output
+        if not lldp_entries[0]["local_interface"]:
+            if interface:
+                command = "show lldp neighbors {}".format(interface)
+            else:
+                command = "show lldp neighbors"
+            lldp_brief = self._send_command(command)
+            lldp_interfaces = textfsm_extractor(self, "show_lldp_neighbors", lldp_brief)
+            lldp_interfaces = [x["local_interface"] for x in lldp_interfaces]
+            if len(lldp_interfaces) != len(lldp_entries):
+                raise ValueError(
+                    "LLDP neighbor count has changed between commands. "
+                    "Interface: {}\nEntries: {}".format(lldp_interfaces, lldp_entries)
+                )
 
+        for idx, lldp_entry in enumerate(lldp_entries):
+            local_intf = lldp_entry.pop("local_interface") or lldp_interfaces[idx]
+            # Convert any 'not advertised' to an empty string
+            for field in lldp_entry:
+                if "not advertised" in lldp_entry[field]:
+                    lldp_entry[field] = ""
+            # Add field missing on IOS
+            lldp_entry["parent_interface"] = ""
+            # Translate the capability fields
+            lldp_entry["remote_system_capab"] = transform_lldp_capab(
+                lldp_entry["remote_system_capab"]
+            )
+            lldp_entry["remote_system_enable_capab"] = transform_lldp_capab(
+                lldp_entry["remote_system_enable_capab"]
+            )
+            # Turn the interfaces into their long version
+            local_intf = canonical_interface_name(local_intf)
+            lldp.setdefault(local_intf, [])
+            lldp[local_intf].append(lldp_entry)
+
+        return lldp
     # ok
     def get_arp_table(self, vrf=""):
         """
