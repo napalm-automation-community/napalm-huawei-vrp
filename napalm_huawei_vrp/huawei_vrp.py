@@ -808,13 +808,7 @@ class VRPDriver(NetworkDriver):
         return results
 
     # develop
-    def transform_lldp_capaba(capabilities):
-        if capabilities and isinstance(capabilities, str):
-                capabilities = capabilities.lower().split(" ")
-                return sorted([capabilities])
-        else:
-                return []
-            
+   
     def get_lldp_neighbors_detail(self, interface=""):
         lldp = {}
         lldp_interfaces = []
@@ -858,9 +852,12 @@ class VRPDriver(NetworkDriver):
             # Add field missing on IOS
             lldp_entry["parent_interface"] = ""
             # Translate the capability fields
-            lldp_entry["remote_system_capab"] = transform_lldp_capaba(
-                lldp_entry["remote_system_capab"]
-            )
+            if lldp_entry["remote_system_capab"] and isinstance(lldp_entry["remote_system_capab"], str):
+               lldp_entry["remote_system_capab"] = sorted([lldp_entry["remote_system_capab"].lower().split(" ")])
+            else:
+                return []
+          
+
             lldp_entry["remote_system_enable_capab"] = transform_lldp_capaba(
                 lldp_entry["remote_system_enable_capab"]
             )
