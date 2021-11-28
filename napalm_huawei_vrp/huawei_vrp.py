@@ -851,10 +851,10 @@ class VRPDriver(NetworkDriver):
             # Add field missing on IOS
             lldp_entry["parent_interface"] = ""
             # Translate the capability fields
-            lldp_entry["remote_system_capab"] = transform_lldp_capab(
+            lldp_entry["remote_system_capab"] = transform_lldp_capaba(
                 lldp_entry["remote_system_capab"]
             )
-            lldp_entry["remote_system_enable_capab"] = transform_lldp_capab(
+            lldp_entry["remote_system_enable_capab"] = transform_lldp_capaba(
                 lldp_entry["remote_system_enable_capab"]
             )
             # Turn the interfaces into their long version
@@ -864,6 +864,15 @@ class VRPDriver(NetworkDriver):
 
         return lldp
     # ok
+    
+    def transform_lldp_capaba(capabilities):
+    if capabilities and isinstance(capabilities, str):
+        capabilities = capabilities.lower().split(" ")
+        return sorted([for c in capabilities]
+        )
+    else:
+        return []
+    
     def get_arp_table(self, vrf=""):
         """
                 Get arp table information.
