@@ -831,7 +831,7 @@ class VRPDriver(NetworkDriver):
             if interface:
                 command = "display lldp neighbor interface {}".format(interface)
             else:
-                command = "display lldp neighbor"
+                command = "display lldp neighbor brief"
             
             lldp_brief = self.device.send_command(command)
             lldp_interfaces = textfsm_extractor(self, "show_lldp_neighbors", lldp_brief)
