@@ -813,7 +813,7 @@ class VRPDriver(NetworkDriver):
         lldp_interfaces = []
 
         if interface:
-            command = "display lldp neighbor interface ".format(interface)
+            command = "display lldp neighbor interface interface {}".format(interface)
         else:
             command = "display lldp neighbor"
         lldp_entries = self.device.send_command(command)
@@ -829,7 +829,7 @@ class VRPDriver(NetworkDriver):
         # which is in the same sequence as the detailed output
         if not lldp_entries[0]["local_interface"]:
             if interface:
-                command = "display lldp neighbor ".format(interface)
+                command = "display lldp neighbor interface {}".format(interface)
             else:
                 command = "display lldp neighbor"
             lldp_brief = self.device.send_command(command)
