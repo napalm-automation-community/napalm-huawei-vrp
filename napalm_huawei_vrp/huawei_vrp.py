@@ -835,7 +835,6 @@ class VRPDriver(NetworkDriver):
             
             lldp_brief = self.device.send_command(command)
             lldp_interfaces = textfsm_extractor(self, "show_lldp_neighbors", lldp_brief)
-            raise ValueError(lldp_brief)
             lldp_interfaces = [x["local_interface"] for x in lldp_interfaces]
             if len(lldp_interfaces) != len(lldp_entries):
                 raise ValueError(
