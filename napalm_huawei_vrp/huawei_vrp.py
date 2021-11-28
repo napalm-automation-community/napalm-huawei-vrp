@@ -808,6 +808,13 @@ class VRPDriver(NetworkDriver):
         return results
 
     # develop
+    def transform_lldp_capaba(capabilities):
+        if capabilities and isinstance(capabilities, str):
+                capabilities = capabilities.lower().split(" ")
+                return sorted([capabilities])
+        else:
+                return []
+            
     def get_lldp_neighbors_detail(self, interface=""):
         lldp = {}
         lldp_interfaces = []
@@ -865,12 +872,7 @@ class VRPDriver(NetworkDriver):
         return lldp
     # ok
     
-    def transform_lldp_capaba(capabilities):
-        if capabilities and isinstance(capabilities, str):
-                capabilities = capabilities.lower().split(" ")
-                return sorted([capabilities])
-        else:
-                return []
+
             
     
     def get_arp_table(self, vrf=""):
