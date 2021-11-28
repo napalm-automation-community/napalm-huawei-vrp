@@ -869,7 +869,7 @@ class VRPDriver(NetworkDriver):
         if capabilities and isinstance(capabilities, str):
                 capabilities = capabilities.lower().split(" ")
                 return sorted([capabilities])
-            else:
+        else:
                 return []
             
     
