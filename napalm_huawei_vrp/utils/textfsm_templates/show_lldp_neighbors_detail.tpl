@@ -8,7 +8,7 @@ Value REMOTE_SYSTEM_CAPAB (.*)
 Value REMOTE_SYSTEM_ENABLE_CAPAB (.*)
 
 Start
-  ^Local Intf\s*?[:-]+${LOCAL_INTERFACE}
+  ^${LOCAL_INTERFACE}.* has
   ^Chassis ID\s*?[:-]+${REMOTE_CHASSIS_ID}
   ^Port ID\s*?[:-]+${REMOTE_PORT}
   ^Port description\s*?[:-]+${REMOTE_PORT_DESCRIPTION}
