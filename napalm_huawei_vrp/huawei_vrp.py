@@ -40,6 +40,7 @@ from napalm.base.exceptions import (
     CommandErrorException,
     CommitError,
 )
+from .utils.utils import pretty_mac
 
 # Easier to store these as constants
 HOUR_SECONDS = 3600
@@ -180,7 +181,7 @@ class VRPDriver(NetworkDriver):
 
         return cli_output
 
-    # ok
+    # verified
     def get_facts(self):
         """Return a set of facts from the devices."""
         # default values.
@@ -230,10 +231,10 @@ class VRPDriver(NetworkDriver):
         return {
             'uptime': int(uptime),
             'vendor': vendor,
-            'os_version': py23_compat.text_type(os_version),
+            'os_version': os_version,
             'serial_number': serial_number,
-            'model': py23_compat.text_type(model),
-            'hostname': py23_compat.text_type(hostname),
+            'model': model,
+            'hostname': hostname,
             'fqdn': fqdn,  # ? fqdn(fully qualified domain name)
             'interface_list': interface_list
         }
@@ -336,7 +337,7 @@ class VRPDriver(NetworkDriver):
             environment['memory']['used_ram'] = int(match.group("used_ram"))
         return environment
 
-    # ok
+    # verified
     def get_config(self, retrieve="all", full=False):
         """
         Get config from device.
@@ -353,21 +354,21 @@ class VRPDriver(NetworkDriver):
 
         if retrieve.lower() in ('running', 'all'):
             command = 'display current-configuration'
-            config['running'] = py23_compat.text_type(self.device.send_command(command))
+            config['running'] = self.device.send_command(command)
         if retrieve.lower() in ('startup', 'all'):
             # command = 'display saved-configuration last'
             # config['startup'] = py23_compat.text_type(self.device.send_command(command))
             pass
         return config
 
-    # ok
+    # verified
     def ping(self, destination, source=c.PING_SOURCE, ttl=c.PING_TTL, timeout=c.PING_TIMEOUT, size=c.PING_SIZE,
              count=c.PING_COUNT, vrf=c.PING_VRF):
         """Execute ping on the device."""
         ping_dict = {}
         command = 'ping'
         # Timeout in milliseconds to wait for each reply, the default is 2000
-        command += ' -t {}'.format(timeout*1000)
+        command += ' -t {}'.format(timeout * 1000)
         # Specify the number of data bytes to be sent
         command += ' -s {}'.format(size)
         # Specify the number of echo requests to be sent
@@ -381,13 +382,13 @@ class VRPDriver(NetworkDriver):
             ping_dict['error'] = output
         elif 'PING' in output:
             ping_dict['success'] = {
-                                'probes_sent': 0,
-                                'packet_loss': 0,
-                                'rtt_min': 0.0,
-                                'rtt_max': 0.0,
-                                'rtt_avg': 0.0,
-                                'rtt_stddev': 0.0,
-                                'results': []
+                'probes_sent': 0,
+                'packet_loss': 0,
+                'rtt_min': 0.0,
+                'rtt_max': 0.0,
+                'rtt_avg': 0.0,
+                'rtt_stddev': 0.0,
+                'results': []
             }
 
             match_sent = re.search(r"(\d+).+transmitted", output, re.M)
@@ -413,12 +414,12 @@ class VRPDriver(NetworkDriver):
                 results_array = []
                 match = re.findall(r"Reply from.+time=(\d+)", output, re.M)
                 for i in match:
-                    results_array.append({'ip_address': py23_compat.text_type(destination),
+                    results_array.append({'ip_address': destination,
                                           'rtt': float(i)})
                 ping_dict['success'].update({'results': results_array})
         return ping_dict
 
-    # ok
+    # verified
     def get_interfaces(self):
         """
         Get interface details (last_flapped is not implemented).
@@ -501,7 +502,7 @@ class VRPDriver(NetworkDriver):
             })
         return interfaces
 
-    # ok
+    # verified
     def get_interfaces_ip(self):
         """
         Get interface IP details. Returns a dictionary of dictionaries.
@@ -586,9 +587,10 @@ class VRPDriver(NetworkDriver):
 
         return interfaces_ip
 
-    # ok
+    # verified
     def get_interfaces_counters(self):
         """Return interfaces counters."""
+
         def process_counts(tup):
             for item in tup:
                 if item != "":
@@ -621,19 +623,19 @@ class VRPDriver(NetworkDriver):
                 raise ValueError(msg)
             intf_name = match_intf.group('intf_name')
             intf_counter = {
-                    'tx_errors': 0,
-                    'rx_errors': 0,
-                    'tx_discards': 0,
-                    'rx_discards': 0,
-                    'tx_octets': 0,
-                    'rx_octets': 0,
-                    'tx_unicast_packets': 0,
-                    'rx_unicast_packets': 0,
-                    'tx_multicast_packets': 0,
-                    'rx_multicast_packets': 0,
-                    'tx_broadcast_packets': 0,
-                    'rx_broadcast_packets': 0
-                }
+                'tx_errors': 0,
+                'rx_errors': 0,
+                'tx_discards': 0,
+                'rx_discards': 0,
+                'tx_octets': 0,
+                'rx_octets': 0,
+                'tx_unicast_packets': 0,
+                'rx_unicast_packets': 0,
+                'tx_multicast_packets': 0,
+                'rx_multicast_packets': 0,
+                'tx_broadcast_packets': 0,
+                'rx_broadcast_packets': 0
+            }
 
             match = re.findall(re_errors, interface, flags=re.M)
             if match:
@@ -751,7 +753,7 @@ class VRPDriver(NetworkDriver):
             self.changed = False
             self._save_config()
 
-    # ok
+    # verified
     def get_lldp_neighbors(self):
         """
         Return LLDP neighbors brief info.
@@ -794,8 +796,8 @@ class VRPDriver(NetworkDriver):
                 results[local_intf] = []
 
             neighbor_dict = dict()
-            neighbor_dict['hostname'] = py23_compat.text_type(neighbor[1])
-            neighbor_dict['port'] = py23_compat.text_type(neighbor[2])
+            neighbor_dict['hostname'] = neighbor[1]
+            neighbor_dict['port'] = neighbor[2]
             results[local_intf].append(neighbor_dict)
         return results
 
@@ -812,7 +814,7 @@ class VRPDriver(NetworkDriver):
         lldp_neighbors = {}
         return lldp_neighbors
 
-    # ok
+    # verified
     def get_arp_table(self, vrf=""):
         """
                 Get arp table information.
@@ -853,14 +855,14 @@ class VRPDriver(NetworkDriver):
 
             entry = {
                 'interface': arp[4],
-                'mac': napalm.base.helpers.mac(arp[1]),
+                'mac': pretty_mac(arp[1]),
                 'ip': arp[0],
                 'age': -1.0,
             }
             arp_table.append(entry)
         return arp_table
 
-    # ok
+    # verified
     def get_mac_address_table(self):
         """
         Return the MAC address table.
@@ -943,10 +945,10 @@ class VRPDriver(NetworkDriver):
         # output = self.device.send_command(command)
 
         snmp_information = {
-            'contact': py23_compat.text_type(''),
-            'location': py23_compat.text_type(''),
+            'contact': '',
+            'location': '',
             'community': {},
-            'chassis_id': py23_compat.text_type('')
+            'chassis_id': ''
         }
         return snmp_information
         pass
@@ -980,7 +982,7 @@ class VRPDriver(NetworkDriver):
     def get_ipv6_neighbors_table(self):
         pass
 
-    # ok
+    # verified
     def get_ntp_peers(self):
         """
         Return the NTP peers configuration as list of dictionaries.
@@ -1004,15 +1006,15 @@ class VRPDriver(NetworkDriver):
         ntp_peer = []
         command = "display ntp session"
         output = self.device.send_command(command)
-        re_ntp = r"clock source:\s+(?P<clock_source>\S+)$\n.*"\
-                 r"clock stratum:\s+(?P<clock_strat>\S+)$\n.*"\
-                 r"clock status:\s+(?P<sync_status>.+)$\n.*"\
-                 r"reference clock ID:\s(?P<ntp_ref_id>\S+)$\n.*"\
-                 r"reach:\s(?P<reach>\S+)$\n.*"\
-                 r"current poll:\s(?P<cur_poll>\S+)$\n.*"\
-                 r"now:\s(?P<now>\S+)$\n.*"\
-                 r"offset:\s(?P<offset>.+)$\n.*"\
-                 r"delay:\s(?P<delay>.+)$\n.*"\
+        re_ntp = r"clock source:\s+(?P<clock_source>\S+)$\n.*" \
+                 r"clock stratum:\s+(?P<clock_strat>\S+)$\n.*" \
+                 r"clock status:\s+(?P<sync_status>.+)$\n.*" \
+                 r"reference clock ID:\s(?P<ntp_ref_id>\S+)$\n.*" \
+                 r"reach:\s(?P<reach>\S+)$\n.*" \
+                 r"current poll:\s(?P<cur_poll>\S+)$\n.*" \
+                 r"now:\s(?P<now>\S+)$\n.*" \
+                 r"offset:\s(?P<offset>.+)$\n.*" \
+                 r"delay:\s(?P<delay>.+)$\n.*" \
                  r"disper:\s(?P<disper>.+)$"
 
         match = re.findall(re_ntp, output, re.MULTILINE)
@@ -1031,7 +1033,8 @@ class VRPDriver(NetworkDriver):
             }
             ntp_peer.append(ntp_dict)
         return ntp_peer
-    # ok
+
+    # verified
     def get_ntp_servers(self):
         """
         Return the NTP active servers status as a list of dictionaries.
@@ -1049,9 +1052,9 @@ class VRPDriver(NetworkDriver):
         ntp_server = []
         command = "display ntp trace"
         output = self.device.send_command(command)
-        re_ntp = r"server\s+(?P<ntp_server>\S+),.*"\
-                 r"stratum\s+(?P<clock_strat>\S+),\s*"\
-                 r"offset\s+(?P<offset>.+),\s.*"\
+        re_ntp = r"server\s+(?P<ntp_server>\S+),.*" \
+                 r"stratum\s+(?P<clock_strat>\S+),\s*" \
+                 r"offset\s+(?P<offset>.+),\s.*" \
                  r"synch distance\s(?P<synch_distance>\S+)"
 
         match = re.findall(re_ntp, output, re.MULTILINE)
@@ -1066,7 +1069,7 @@ class VRPDriver(NetworkDriver):
             ntp_server.append(ntp_dict)
         return ntp_server
 
-    # ok
+    # verified
     def get_ntp_stats(self):
         """
         Return the NTP Status as dictionary.
@@ -1082,9 +1085,9 @@ class VRPDriver(NetworkDriver):
         ntp_stats = {}
         command = "display ntp status"
         output = self.device.send_command(command)
-        re_ntp = r"clock status:\s+(?P<sync_status>\S+).*"\
-                 r"clock stratum:\s+(?P<clock_strat>\S+).*"\
-                 r"reference clock ID:\s(?P<ntp_ref_id>\S+).*"\
+        re_ntp = r"clock status:\s+(?P<sync_status>\S+).*" \
+                 r"clock stratum:\s+(?P<clock_strat>\S+).*" \
+                 r"reference clock ID:\s(?P<ntp_ref_id>\S+).*" \
                  r"reference time:\s(?P<ref_time>.+\))"
         match = re.search(re_ntp, output, re.DOTALL)
         if match is None:
@@ -1096,7 +1099,7 @@ class VRPDriver(NetworkDriver):
                 'clock_stratum': int(match.group('clock_strat')),
                 'ntp_reference_id': match.group('ntp_ref_id'),
                 'reference_time': match.group('ref_time')
-                 }
+            }
         ntp_stats.update(ntp_dict)
         return ntp_stats
 
@@ -1215,7 +1218,7 @@ class VRPDriver(NetworkDriver):
         return False
 
     @staticmethod
-    def _get_local_md5(dst, blocksize=2**20):
+    def _get_local_md5(dst, blocksize=2 ** 20):
         md5 = hashlib.md5()
         local_file = open(dst, 'rb')
         buf = local_file.read(blocksize)
@@ -1331,7 +1334,7 @@ class VRPDriver(NetworkDriver):
     @staticmethod
     def _create_tmp_file(config):
         tmp_dir = tempfile.gettempdir()
-        rand_fname = py23_compat.text_type(uuid.uuid4())
+        rand_fname = str(uuid.uuid4())
         filename = os.path.join(tmp_dir, rand_fname)
         with open(filename, 'wt') as fobj:
             fobj.write(config)
