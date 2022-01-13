@@ -123,7 +123,7 @@ class VRPDriver(NetworkDriver):
         """
         device_type = "huawei"
         if self.transport == "telnet":
-            device_type = "huawei_telent"
+            device_type = "huawei_telnet"
         self.device = self._netmiko_open(
             device_type, netmiko_optional_args=self.netmiko_optional_args
         )
