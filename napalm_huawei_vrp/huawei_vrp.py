@@ -419,6 +419,10 @@ class VRPDriver(NetworkDriver):
                 ping_dict['success'].update({'results': results_array})
         return ping_dict
 
+    # developing
+    def traceroute(self):
+        pass
+
     # verified
     def get_interfaces(self):
         """
@@ -923,18 +927,6 @@ class VRPDriver(NetworkDriver):
         return mac_address_table
 
     # developing
-    def pre_connection_tests(self):
-        pass
-
-    # developing
-    def connection_tests(self):
-        pass
-
-    # developing
-    def post_connection_tests(self):
-        pass
-
-    # developing
     def get_route_to(self, destination="", protocol=""):
         pass
 
@@ -962,24 +954,11 @@ class VRPDriver(NetworkDriver):
         pass
 
     # developing
-    def traceroute(self, destination, source=c.TRACEROUTE_SOURCE, ttl=c.TRACEROUTE_TTL, timeout=c.TRACEROUTE_TIMEOUT,
-                   vrf=c.TRACEROUTE_VRF):
-        pass
-
-    # developing
     def get_users(self):
         pass
 
     # developing
     def get_optics(self):
-        pass
-
-    # developing
-    def get_network_instances(self, name=""):
-        pass
-
-    # developing
-    def get_ipv6_neighbors_table(self):
         pass
 
     # verified
