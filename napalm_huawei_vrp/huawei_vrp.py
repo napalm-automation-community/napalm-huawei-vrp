@@ -32,7 +32,6 @@ import napalm.base.constants as c
 
 from datetime import datetime
 from napalm.base import NetworkDriver
-# from napalm.base.utils import py23_compat
 from napalm.base.netmiko_helpers import netmiko_args
 from napalm.base.exceptions import (
     MergeConfigException,
@@ -361,6 +360,83 @@ class VRPDriver(NetworkDriver):
             pass
         return config
 
+    # ok
+    def load_merge_candidate(self, filename=None, config=None):
+        """Open the candidate config and merge."""
+        if not filename and not config:
+            raise MergeConfigException('filename or config param must be provided.')
+
+        self.merge_candidate += '\n'  # insert one extra line
+        if filename is not None:
+            with open(filename, "r") as f:
+                self.merge_candidate += f.read()
+        else:
+            self.merge_candidate += config
+
+        self.replace = False
+        self.loaded = True
+
+    # developing
+    def load_replace_candidate(self, filename=None, config=None):
+        """Open the candidate config and replace."""
+        if not filename and not config:
+            raise ReplaceConfigException('filename or config param must be provided.')
+
+        self._replace_candidate(filename, config)
+        self.replace = True
+        self.loaded = True
+
+    # ok
+    def commit_config(self, message=""):
+        """Commit configuration."""
+        if self.loaded:
+            try:
+                self.backup_file = 'config_' + datetime.now().strftime("%Y%m%d_%H%M") + '.cfg'
+                if self._check_file_exists(self.backup_file):
+                    self._delete_file(self.backup_file)
+                self._save_config(self.backup_file)
+                if self.replace:
+                    self._load_config(self.replace_file.split('/')[-1])
+                else:
+                    self._commit_merge()
+                    self.merge_candidate = ''  # clear the merge buffer
+
+                self.changed = True
+                self.loaded = False
+                self._save_config()
+            except Exception as e:
+                raise CommitError(str(e))
+        else:
+            raise CommitError('No config loaded.')
+
+    # ok
+    def compare_config(self):
+        """Compare candidate config with running."""
+        if self.loaded:
+            if not self.replace:
+                return self._get_merge_diff()
+                # return self.merge_candidate
+            diff = self._get_diff(self.replace_file.split('/')[-1])
+            return diff
+        return ''
+
+    # ok
+    def discard_config(self):
+        """Discard changes."""
+        if self.loaded:
+            self.merge_candidate = ''  # clear the buffer
+        if self.loaded and self.replace:
+            self._delete_file(self.replace_file)
+        self.loaded = False
+
+    # developing
+    def rollback(self):
+        """Rollback to previous commit."""
+        if self.changed:
+            self._load_config(self.backup_file)
+            self.changed = False
+            self._save_config()
+
     # verified
     def ping(self, destination, source=c.PING_SOURCE, ttl=c.PING_TTL, timeout=c.PING_TIMEOUT, size=c.PING_SIZE,
              count=c.PING_COUNT, vrf=c.PING_VRF):
@@ -423,6 +499,7 @@ class VRPDriver(NetworkDriver):
     def traceroute(self):
         pass
 
+    # get information from network device
     # verified
     def get_interfaces(self):
         """
@@ -679,83 +756,6 @@ class VRPDriver(NetworkDriver):
                 intf_name: intf_counter
             })
         return interfaces
-
-    # ok
-    def load_merge_candidate(self, filename=None, config=None):
-        """Open the candidate config and merge."""
-        if not filename and not config:
-            raise MergeConfigException('filename or config param must be provided.')
-
-        self.merge_candidate += '\n'  # insert one extra line
-        if filename is not None:
-            with open(filename, "r") as f:
-                self.merge_candidate += f.read()
-        else:
-            self.merge_candidate += config
-
-        self.replace = False
-        self.loaded = True
-
-    # developing
-    def load_replace_candidate(self, filename=None, config=None):
-        """Open the candidate config and replace."""
-        if not filename and not config:
-            raise ReplaceConfigException('filename or config param must be provided.')
-
-        self._replace_candidate(filename, config)
-        self.replace = True
-        self.loaded = True
-
-    # ok
-    def commit_config(self, message=""):
-        """Commit configuration."""
-        if self.loaded:
-            try:
-                self.backup_file = 'config_' + datetime.now().strftime("%Y%m%d_%H%M") + '.cfg'
-                if self._check_file_exists(self.backup_file):
-                    self._delete_file(self.backup_file)
-                self._save_config(self.backup_file)
-                if self.replace:
-                    self._load_config(self.replace_file.split('/')[-1])
-                else:
-                    self._commit_merge()
-                    self.merge_candidate = ''  # clear the merge buffer
-
-                self.changed = True
-                self.loaded = False
-                self._save_config()
-            except Exception as e:
-                raise CommitError(str(e))
-        else:
-            raise CommitError('No config loaded.')
-
-    # ok
-    def compare_config(self):
-        """Compare candidate config with running."""
-        if self.loaded:
-            if not self.replace:
-                return self._get_merge_diff()
-                # return self.merge_candidate
-            diff = self._get_diff(self.replace_file.split('/')[-1])
-            return diff
-        return ''
-
-    # ok
-    def discard_config(self):
-        """Discard changes."""
-        if self.loaded:
-            self.merge_candidate = ''  # clear the buffer
-        if self.loaded and self.replace:
-            self._delete_file(self.replace_file)
-        self.loaded = False
-
-    # developing
-    def rollback(self):
-        """Rollback to previous commit."""
-        if self.changed:
-            self._load_config(self.backup_file)
-            self.changed = False
-            self._save_config()
 
     # verified
     def get_lldp_neighbors(self):

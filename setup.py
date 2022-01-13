@@ -11,7 +11,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="napalm-huawei-vrp",
-    version="0.1.5",
+    version="1.0.0",
     packages=find_packages(),
     author="Locus Li",
     author_email="locus@byto.top",

@@ -5,8 +5,7 @@
 
 NAPALM driver for HUAWEI Campus Network Switch, support the S5700,S6700 etc.
 
-This repository is using some [NAPALM-CE](https://github.com/napalm-automation-community/napalm-ce) code, thanks for thdDaniel's contribution
-
+This repository is reference  [NAPALM-CE](https://github.com/napalm-automation-community/napalm-ce) and Cisco IOS code, thanks for thdDaniel's contribution
 
 ## Instructions
 
