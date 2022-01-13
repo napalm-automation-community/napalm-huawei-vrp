@@ -32,7 +32,7 @@ import napalm.base.constants as c
 
 from datetime import datetime
 from napalm.base import NetworkDriver
-from napalm.base.utils import py23_compat
+# from napalm.base.utils import py23_compat
 from napalm.base.netmiko_helpers import netmiko_args
 from napalm.base.exceptions import (
     MergeConfigException,
@@ -139,7 +139,7 @@ class VRPDriver(NetworkDriver):
             self.prompt_quiet_configured = False
         self._netmiko_close()
 
-    # ok
+    # verified
     def is_alive(self):
         """ Returns a flag with the state of the connection."""
         if self.device is None:
@@ -162,7 +162,7 @@ class VRPDriver(NetworkDriver):
             # If unable to send, we can tell for sure that the connection is unusable
             return {'is_alive': False}
 
-    # ok
+    # verified
     def cli(self, commands):
         """Execute a list of commands and return the output in a dictionary format using the command
         Example input:
