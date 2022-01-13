@@ -15,23 +15,10 @@
 
 """
 Napalm driver for huawei Enterprise switch, community.
-
+author： Locus Li（locus@byto.top）
 Read https://napalm.readthedocs.io for more information.
 """
 
-from napalm.base import NetworkDriver
-import napalm.base.helpers
-from napalm.base.utils import py23_compat
-from napalm.base.netmiko_helpers import netmiko_args
-import napalm.base.constants as c
-from napalm.base.exceptions import (
-    MergeConfigException,
-    ReplaceConfigException,
-    CommandErrorException,
-    CommitError,
-)
-
-from datetime import datetime
 import socket
 import re
 import telnetlib
@@ -40,6 +27,19 @@ import tempfile
 import paramiko
 import uuid
 import hashlib
+import napalm.base.helpers
+import napalm.base.constants as c
+
+from datetime import datetime
+from napalm.base import NetworkDriver
+from napalm.base.utils import py23_compat
+from napalm.base.netmiko_helpers import netmiko_args
+from napalm.base.exceptions import (
+    MergeConfigException,
+    ReplaceConfigException,
+    CommandErrorException,
+    CommitError,
+)
 
 # Easier to store these as constants
 HOUR_SECONDS = 3600
@@ -117,7 +117,7 @@ class VRPDriver(NetworkDriver):
         # Track whether 'file prompt quiet' is known to be configured
         self.prompt_quiet_configured = None
 
-    # ok
+    # verified
     def open(self):
         """Open a connection to the device.
         """
@@ -128,7 +128,7 @@ class VRPDriver(NetworkDriver):
             device_type, netmiko_optional_args=self.netmiko_optional_args
         )
 
-    # ok
+    # verified
     def close(self):
         """Close the connection to the device and do the necessary cleanup."""
 
@@ -238,7 +238,7 @@ class VRPDriver(NetworkDriver):
             'interface_list': interface_list
         }
 
-    # develop
+    # developing
     def get_environment(self):
         """
         Return environment details.
@@ -690,7 +690,7 @@ class VRPDriver(NetworkDriver):
         self.replace = False
         self.loaded = True
 
-    # develop
+    # developing
     def load_replace_candidate(self, filename=None, config=None):
         """Open the candidate config and replace."""
         if not filename and not config:
@@ -743,7 +743,7 @@ class VRPDriver(NetworkDriver):
             self._delete_file(self.replace_file)
         self.loaded = False
 
-    # develop
+    # developing
     def rollback(self):
         """Rollback to previous commit."""
         if self.changed:
@@ -920,23 +920,23 @@ class VRPDriver(NetworkDriver):
             mac_address_table.append(mac_dict)
         return mac_address_table
 
-    # develop
+    # developing
     def pre_connection_tests(self):
         pass
 
-    # develop
+    # developing
     def connection_tests(self):
         pass
 
-    # develop
+    # developing
     def post_connection_tests(self):
         pass
 
-    # develop
+    # developing
     def get_route_to(self, destination="", protocol=""):
         pass
 
-    # develop
+    # developing
     def get_snmp_information(self):
         # snmp_information = {}
         # command = 'display snmp-agent sys-info'
@@ -951,32 +951,32 @@ class VRPDriver(NetworkDriver):
         return snmp_information
         pass
 
-    # develop
+    # developing
     def get_probes_config(self):
         pass
 
-    # develop
+    # developing
     def get_probes_results(self):
         pass
 
-    # develop
+    # developing
     def traceroute(self, destination, source=c.TRACEROUTE_SOURCE, ttl=c.TRACEROUTE_TTL, timeout=c.TRACEROUTE_TIMEOUT,
                    vrf=c.TRACEROUTE_VRF):
         pass
 
-    # develop
+    # developing
     def get_users(self):
         pass
 
-    # develop
+    # developing
     def get_optics(self):
         pass
 
-    # develop
+    # developing
     def get_network_instances(self, name=""):
         pass
 
-    # develop
+    # developing
     def get_ipv6_neighbors_table(self):
         pass
 
