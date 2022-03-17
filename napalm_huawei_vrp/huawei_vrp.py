@@ -197,12 +197,12 @@ class VRPDriver(NetworkDriver):
         # os_version/uptime/model
         for line in show_ver.splitlines():
             if 'VRP (R) software' in line:
-                search_result = re.search(r"\(S\S+\s+(?P<os_version>V\S+)\)", line)
+                search_result = re.search(r"\((S\S+|AR\S+|AC\S+)\s+(?P<os_version>V\S+)\)", line)
                 if search_result is not None:
                     os_version = search_result.group('os_version')
 
-            if 'HUAWEI' in line and 'uptime is' in line:
-                search_result = re.search(r"S\S+", line)
+            if 'HUAWEI' in line and 'uptime is' in line or 'Huawei' in line and 'uptime is' in line:
+                search_result = re.search(r"S\S+|AR\S+|AC\S+", line)
                 if search_result is not None:
                     model = search_result.group(0)
                 uptime = self._parse_uptime(line)
@@ -212,6 +212,9 @@ class VRPDriver(NetworkDriver):
         # 由于堆叠设备会有多少个SN，所以这里用列表展示
         re_sn = r"ESN\s+of\s+slot\s+\S+\s+(?P<serial_number>\S+)"
         serial_number = re.findall(re_sn, show_esn, flags=re.M)
+        if serial_number == []:
+            re_sn = r"ESN\s+of\s+device\S+\s+(?P<serial_number>\S+)"
+            serial_number = re.findall(re_sn, show_esn, flags=re.M)
 
         if 'sysname ' in show_hostname:
             _, hostname = show_hostname.split("sysname ")
