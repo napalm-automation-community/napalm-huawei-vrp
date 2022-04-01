@@ -72,7 +72,7 @@ class VRPDriver(NetworkDriver):
         netmiko_argument_map = {
             'port': None,
             'verbose': False,
-            'timeout': self.timeout,
+            'conn_timeout': self.timeout,
             'global_delay_factor': 1,
             'use_keys': False,
             'key_file': None,
