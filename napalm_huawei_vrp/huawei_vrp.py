@@ -41,6 +41,9 @@ from napalm.base.exceptions import (
 )
 from .utils.utils import pretty_mac
 
+from netmiko import ConnectHandler
+from netmiko.ssh_exception import NetMikoTimeoutException
+
 # Easier to store these as constants
 HOUR_SECONDS = 3600
 DAY_SECONDS = 24 * HOUR_SECONDS
@@ -121,23 +124,32 @@ class VRPDriver(NetworkDriver):
     def open(self):
         """Open a connection to the device.
         """
-        device_type = "huawei"
-        if self.transport == "telnet":
-            device_type = "huawei_telnet"
-        self.device = self._netmiko_open(
-            device_type, netmiko_optional_args=self.netmiko_optional_args
-        )
+        try:
+            if self.transport == 'ssh':
+                device_type = 'huawei'
+            else:
+                raise ConnectionException("Unknown transport: {}".format(self.transport))
+
+            self.device = ConnectHandler(device_type=device_type,
+                                         host=self.hostname,
+                                         username=self.username,
+                                         password=self.password,
+                                         **self.netmiko_optional_args)
+            # self.device.enable()
+
+        except NetMikoTimeoutException:
+            raise ConnectionException('Cannot connect to {}'.format(self.hostname))
 
     # verified
     def close(self):
         """Close the connection to the device and do the necessary cleanup."""
 
         # Return file prompt quiet to the original state
-        if self.auto_file_prompt and self.prompt_quiet_changed is True:
-            self.device.send_config_set(["no file prompt quiet"])
-            self.prompt_quiet_changed = False
-            self.prompt_quiet_configured = False
-        self._netmiko_close()
+        if self.changed and self.backup_file != "":
+            self._delete_file(self.backup_file)
+        self.device.disconnect()
+        self.device = None
+
 
     # verified
     def is_alive(self):
