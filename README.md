@@ -1,13 +1,25 @@
 [![PyPI](https://img.shields.io/pypi/v/napalm-huawei-vrp.svg)](https://pypi.python.org/pypi/napalm-huawei-vrp)
 [![PyPI](https://img.shields.io/pypi/dm/napalm-huawei-vrp.svg)](https://pypi.python.org/pypi/napalm-huawei-vrp)
 
-# napalm-huawei-vrp 
+# NAPALM Huawei VRP
 
-NAPALM driver for HUAWEI Campus Network Switch, support the S5700,S6700 etc.
+It's a NAPALM Community Driver for Huawei VRP5/VRP8 Enterprise/Service Provider Routers and Switches.
 
-This repository is reference  [NAPALM-CE](https://github.com/napalm-automation-community/napalm-ce) and Cisco IOS code, thanks for thdDaniel's contribution
-
+This repository is reference [NAPALM-CE](https://github.com/napalm-automation-community/napalm-ce) and Cisco IOS code, thanks for thdDaniel's contribution
 [中文版](README-ZH.md)
+
+## Supported Huawei Network Devices
+
+* NE Series: 
+    * 40E, 8000
+* AR Series:
+    * 2200
+* ATN 900 Series:
+    * 910B, 910C and 910D
+* S Switch Series:
+    * S5700, S6700
+
+This driver is not limited to these models and series, these are just devices where the driver have been tested.
 
 ## Instructions
 
@@ -26,7 +38,7 @@ The driver is under development and iteration.
 |  get_lldp_neighbors()       |  Fetch LLDP neighbor information |
 
 
-### Congfig
+### Config
 
 | API   | Description  |
 |--------|-----|
@@ -96,3 +108,13 @@ device.get_interfaces_counters()
 device.get_lldp_neighbors()
 
 ```
+## Contact
+### Slack
+
+Slack is probably the easiest way to get help with NAPALM. You can find us in the channel napalm on the [network.toCode()](https://networktocode.herokuapp.com/) team.
+
+## News
+### YouTube Videos
+* [NAPALM Network Automation Python: Working with Huawei VRP](https://youtu.be/40Z-hcPHY_M) by Michael Alvarez
+* [NAPALM Network Automation Python: Collect Data from Multiple Vendors. Cisco and Huawei](https://youtu.be/wBuKua1QsUE) by Michael Alvarez
+* [NAPALM Network Automation Python: Making Configurations in a Multivendor Network. Cisco and Huawei](https://youtu.be/QnXhCzaSvBw) by Michael Alvarez
