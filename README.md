@@ -58,10 +58,21 @@ The driver is under development and iteration.
 
 ### Plans to develop
 
-* get_environment()
-* get_lldp_neighbors_detail()
-* get_snmp_information()
-* get_users()
+* get_bgp_config
+* get_bgp_neighbors
+* get_bgp_neighbors_detail
+* get_environment
+* get_ipv6_neighbors_table
+* get_lldp_neighbors_detail
+* get_network_instances
+* get_ntp_peers
+* get_ntp_servers
+* get_ntp_stats
+* get_optics
+* get_route_to
+* get_snmp_information
+* get_users
+* get_vlans
 
 
 ## How to Install
