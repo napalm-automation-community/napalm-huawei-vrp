@@ -229,7 +229,6 @@ class VRPDriver(NetworkDriver):
             serial_number = re.findall(re_sn, show_esn, flags=re.M)
             
         if 'sysname ' in show_hostname:
-            hostname = show_hostname.split("sysname ")
             if type(hostname) == list:
                 hostname = hostname[0]
                 hostname = hostname.strip()
