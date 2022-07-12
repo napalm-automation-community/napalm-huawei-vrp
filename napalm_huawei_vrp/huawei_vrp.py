@@ -228,13 +228,11 @@ class VRPDriver(NetworkDriver):
             re_sn = r"ESN\s+of\s+device\S+\s+(?P<serial_number>\S+)"
             serial_number = re.findall(re_sn, show_esn, flags=re.M)
             
+        patern = r"\bsysname\s[A-Za-z0-9._%+-]+\b"
+        show_hostname = re.search(patern, show_hostname).group(0)
         if 'sysname ' in show_hostname:
-            if type(hostname) == list:
-                hostname = hostname[0]
-                hostname = hostname.strip()
-            else:
-                _, hostname = show_hostname.split("sysname ")
-                hostname = hostname.strip()
+            _, hostname = show_hostname.split("sysname ")
+            hostname = hostname.strip()
 
         # interface_list filter
         interface_list = []
