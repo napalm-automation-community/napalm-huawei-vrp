@@ -410,7 +410,8 @@ class VRPDriver(NetworkDriver):
 
         if retrieve.lower() in ('running', 'all'):
             command = 'display current-configuration'
-            config['running'] = self.device.send_command(command, expect_string='#')
+            config['running'] = self.device.send_command(command, read_timeout=25.0)
+            
         if retrieve.lower() in ('startup', 'all'):
             # command = 'display saved-configuration last'
             # config['startup'] = py23_compat.text_type(self.device.send_command(command))
