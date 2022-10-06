@@ -1,8 +1,8 @@
 """setup.py file."""
 from setuptools import setup, find_packages
 
-with open("requirements.txt", "r") as fs:
-    reqs = [r for r in fs.read().splitlines() if (len(r) > 0 and not r.startswith("#"))]
+#with open("requirements.txt", "r") as fs:
+#    reqs = [r for r in fs.read().splitlines() if (len(r) > 0 and not r.startswith("#"))]
 
 __author__ = 'Locus Li <locus@byto.top>'
 
@@ -31,5 +31,8 @@ setup(
     ],
     url="https://github.com/napalm-automation-community/napalm-huawei-vrp",
     include_package_data=True,
-    install_requires=reqs,
+ #   install_requires=reqs,
+    install_requires=[
+        'napalm>=3.3',
+    ]
 )
