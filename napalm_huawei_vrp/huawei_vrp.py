@@ -42,7 +42,10 @@ from napalm.base.exceptions import (
 from .utils.utils import pretty_mac
 
 from netmiko import ConnectHandler
-from netmiko.exceptions import NetMikoTimeoutException
+try:
+    from netmiko.ssh_exception import NetMikoTimeoutException
+except ModuleNotFoundError:
+    from netmiko import NetMikoTimeoutException
 
 # Easier to store these as constants
 HOUR_SECONDS = 3600
