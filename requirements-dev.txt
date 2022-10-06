@@ -8,3 +8,4 @@ pytest-pythonpath
 pylama
 mock
 tox
+setuptools
