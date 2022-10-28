@@ -189,7 +189,7 @@ class VRPDriver(NetworkDriver):
             raise TypeError("Please enter a valid list of commands!")
 
         for command in commands:
-            output = self.device.send_command(command)
+            output = self.device.send_command(command, read_timeout=25.0)
             cli_output.setdefault(command, {})
             cli_output[command] = output
 
