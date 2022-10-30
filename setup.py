@@ -1,5 +1,13 @@
 """setup.py file."""
 from setuptools import setup, find_packages
+import subprocess
+
+huawei_vrp_version = (
+    subprocess.run(["git", "describe", "--tags"], stdout=subprocess.PIPE)
+    .stdout.decode("utf-8")
+    .strip()
+)
+assert "." in huawei_vrp_version
 
 with open("requirements.txt", "r") as fs:
     reqs = [r for r in fs.read().splitlines() if (len(r) > 0 and not r.startswith("#"))]
@@ -11,7 +19,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="napalm-huawei-vrp",
-    version="1.0.0",
+    version=huawei_vrp_version,
     packages=find_packages(),
     author="Locus Li",
     author_email="locus@byto.top",
