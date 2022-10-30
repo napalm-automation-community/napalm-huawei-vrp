@@ -7,6 +7,15 @@ huawei_vrp_version = (
     .stdout.decode("utf-8")
     .strip()
 )
+if "-" in cf_remote_version:
+    # when not on tag, git describe outputs: "1.3.3-22-gdf81228"
+    # pip has gotten strict with version numbers
+    # so change it to: "1.3.3+22.git.gdf81228"
+    # See: https://peps.python.org/pep-0440/#local-version-segments
+    v,i,s = cf_remote_version.split("-")
+    cf_remote_version = v + "+" + i + ".git." + s
+
+assert "-" not in cf_remote_version
 assert "." in huawei_vrp_version
 
 with open("requirements.txt", "r") as fs:
