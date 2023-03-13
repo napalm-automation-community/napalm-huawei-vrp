@@ -32,6 +32,7 @@ import napalm.base.helpers
 import napalm.base.constants as c
 
 from datetime import datetime
+from diffplus import IndentedConfig, IncrementalDiff
 from napalm.base import NetworkDriver
 from napalm.base.netmiko_helpers import netmiko_args
 from napalm.base.exceptions import (
@@ -135,6 +136,9 @@ class VRPDriver(NetworkDriver):
         self.prompt_quiet_changed = False
         # Track whether 'file prompt quiet' is known to be configured
         self.prompt_quiet_configured = None
+
+        # Contextual diff computation mode
+        self.contextual_diff = optional_args.get('contextual_diff', False)
 
     # verified
     def open(self):
@@ -473,6 +477,8 @@ class VRPDriver(NetworkDriver):
         """Compare candidate config with running."""
         if self.loaded:
             if not self.replace:
+                if self.contextual_diff:
+                    return self._get_contextual_diff()
                 return self._get_merge_diff()
                 # return self.merge_candidate
             diff = self._get_diff(self.replace_file.split('/')[-1])
@@ -1848,6 +1854,13 @@ class VRPDriver(NetworkDriver):
                 if line[0].strip() != '!':
                     diff.append(line)
         return '\n'.join(diff)
+
+    def _get_contextual_diff(self):
+        running_config = self.get_config(retrieve='running')['running']
+        running_config = IndentedConfig(running_config, sanitize=True)
+        merge_candidate = IndentedConfig(self.merge_candidate, sanitize=True)
+        diff = IncrementalDiff(merge_candidate, running_config)
+        return str(diff)
 
     def _get_diff(self, filename=None):
         """Get a diff between running config and a proposed file."""
