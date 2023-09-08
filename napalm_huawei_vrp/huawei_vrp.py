@@ -42,6 +42,12 @@ from napalm.base.exceptions import (
 )
 from .utils.utils import pretty_mac
 
+from netmiko import ConnectHandler
+try:
+    from netmiko.ssh_exception import NetMikoTimeoutException
+except ModuleNotFoundError:
+    from netmiko import NetMikoTimeoutException
+
 # Easier to store these as constants
 HOUR_SECONDS = 3600
 DAY_SECONDS = 24 * HOUR_SECONDS
@@ -91,7 +97,7 @@ class VRPDriver(NetworkDriver):
         netmiko_argument_map = {
             'port': None,
             'verbose': False,
-            'timeout': self.timeout,
+            'conn_timeout': self.timeout,
             'global_delay_factor': 1,
             'use_keys': False,
             'key_file': None,
@@ -140,23 +146,32 @@ class VRPDriver(NetworkDriver):
     def open(self):
         """Open a connection to the device.
         """
-        device_type = "huawei"
-        if self.transport == "telnet":
-            device_type = "huawei_telnet"
-        self.device = self._netmiko_open(
-            device_type, netmiko_optional_args=self.netmiko_optional_args
-        )
+        try:
+            if self.transport == 'ssh':
+                device_type = 'huawei'
+            else:
+                raise ConnectionException("Unknown transport: {}".format(self.transport))
+
+            self.device = ConnectHandler(device_type=device_type,
+                                         host=self.hostname,
+                                         username=self.username,
+                                         password=self.password,
+                                         **self.netmiko_optional_args)
+            # self.device.enable()
+
+        except NetMikoTimeoutException:
+            raise ConnectionException('Cannot connect to {}'.format(self.hostname))
 
     # verified
     def close(self):
         """Close the connection to the device and do the necessary cleanup."""
 
         # Return file prompt quiet to the original state
-        if self.auto_file_prompt and self.prompt_quiet_changed is True:
-            self.device.send_config_set(["no file prompt quiet"])
-            self.prompt_quiet_changed = False
-            self.prompt_quiet_configured = False
-        self._netmiko_close()
+        if self.changed and self.backup_file != "":
+            self._delete_file(self.backup_file)
+        self.device.disconnect()
+        self.device = None
+
 
     # verified
     def is_alive(self):
@@ -193,7 +208,7 @@ class VRPDriver(NetworkDriver):
             raise TypeError("Please enter a valid list of commands!")
 
         for command in commands:
-            output = self.device.send_command(command)
+            output = self.device.send_command(command, read_timeout=25.0)
             cli_output.setdefault(command, {})
             cli_output[command] = output
 
@@ -216,12 +231,12 @@ class VRPDriver(NetworkDriver):
         # os_version/uptime/model
         for line in show_ver.splitlines():
             if 'VRP (R) software' in line:
-                search_result = re.search(r"\(S\S+\s+(?P<os_version>V\S+)\)", line)
+                search_result = re.search(r"\((S\S+|AR\S+|AC\S+)\s+(?P<os_version>V\S+)\)", line)
                 if search_result is not None:
                     os_version = search_result.group('os_version')
 
-            if 'HUAWEI' in line and 'uptime is' in line:
-                search_result = re.search(r"S\S+", line)
+            if 'HUAWEI' in line and 'uptime is' in line or 'Huawei' in line and 'uptime is' in line:
+                search_result = re.search(r"S\S+|AR\S+|AC\S+", line)
                 if search_result is not None:
                     model = search_result.group(0)
                 uptime = self._parse_uptime(line)
@@ -231,7 +246,12 @@ class VRPDriver(NetworkDriver):
         # 由于堆叠设备会有多少个SN，所以这里用列表展示
         re_sn = r"ESN\s+of\s+slot\s+\S+\s+(?P<serial_number>\S+)"
         serial_number = re.findall(re_sn, show_esn, flags=re.M)
-
+        if serial_number == []:
+            re_sn = r"ESN\s+of\s+device\S+\s+(?P<serial_number>\S+)"
+            serial_number = re.findall(re_sn, show_esn, flags=re.M)
+            
+        patern = r"\bsysname\s[A-Za-z0-9._%+-]+\b"
+        show_hostname = re.search(patern, show_hostname).group(0)
         if 'sysname ' in show_hostname:
             _, hostname = show_hostname.split("sysname ")
             hostname = hostname.strip()
@@ -412,7 +432,8 @@ class VRPDriver(NetworkDriver):
 
         if retrieve.lower() in ('running', 'all'):
             command = 'display current-configuration'
-            config['running'] = self.device.send_command(command)
+            config['running'] = self.device.send_command(command, read_timeout=25.0)
+            
         if retrieve.lower() in ('startup', 'all'):
             # command = 'display saved-configuration last'
             # config['startup'] = py23_compat.text_type(self.device.send_command(command))
