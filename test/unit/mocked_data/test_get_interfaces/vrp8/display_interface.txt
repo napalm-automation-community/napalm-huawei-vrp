@@ -1,0 +1,284 @@
+Eth-Trunk10 current state : DOWN (ifindex: 61)
+Line protocol current state : DOWN
+Link quality grade : --
+Description:
+Route Port,Hash arithmetic : According to flow, The Maximum Transmit Unit is 1500
+Internet protocol processing : disabled
+IP Sending Frames' Format is PKTFMT_ETHNT_2, Hardware address is 2c55-d3fb-6c1c
+Current system time: 2023-09-09 19:08:17-04:00
+Physical is ETH_TRUNK
+    Last 300 seconds input rate 0 bits/sec, 0 packets/sec
+    Last 300 seconds output rate 0 bits/sec, 0 packets/sec
+    Input: 0 packets,0 bytes
+           0 unicast,0 broadcast,0 multicast
+           0 errors,0 drops
+    Output:0 packets,0 bytes
+           0 unicast,0 broadcast,0 multicast
+           0 errors,0 drops
+    Last 300 seconds input utility rate:  0.00%
+    Last 300 seconds output utility rate: 0.00%
+----------------------------------------------------------
+PortName                      Status              Weight
+----------------------------------------------------------
+----------------------------------------------------------
+The Number of Ports in Trunk : 0
+The Number of UP Ports in Trunk : 0
+
+GigabitEthernet1/0/0 current state : UP (ifindex: 28)
+Line protocol current state : UP
+Last line protocol up time : 2023-02-09 17:09:43-04:00
+Link quality grade : GOOD
+Description: To_local_n/a_n/a_HUA_30MZ_P_2_10GE10/0/16
+Route Port,The Maximum Transmit Unit is 9194
+Internet Address is 172.23.235.159/31
+IP Sending Frames' Format is PKTFMT_ETHNT_2, Hardware address is dc99-140d-5340
+The Vendor PN is SFP-10G-LR-DHD
+The Vendor Name is OEM
+Port BW: 10G, Transceiver max BW: 10G, Transceiver Mode: SingleMode
+WaveLength: 1310nm, Transmission Distance: 10km
+Rx Power:  -1.47dBm, Warning range: [-15.003,  0.499]dBm
+Tx Power:  -2.98dBm, Warning range: [-7.999,  0.499]dBm
+Loopback: none, LAN full-duplex mode, Pause Flowcontrol: Receive Enable and Send Enable
+Last physical up time   : 2023-02-09 17:09:43-04:00
+Last physical down time : 2023-02-09 17:08:49-04:00
+Current system time: 2023-09-09 19:08:17-04:00
+Statistics last cleared:never
+    Last 300 seconds input rate: 242275 bits/sec, 255 packets/sec
+    Last 300 seconds output rate: 129357 bits/sec, 127 packets/sec
+    Input peak rate 2032539 bits/sec, Record time: 2023-04-26 09:42:39-04:00
+    Output peak rate 534964 bits/sec, Record time: 2023-02-28 15:06:55-04:00
+    Input: 785773731492 bytes, 8072105483 packets
+    Output: 399363420485 bytes, 3947616196 packets
+    Input:
+      Unicast: 7945564334 packets, Multicast: 126541132 packets
+      Broadcast: 17 packets, JumboOctets: 9069983 packets
+      CRC: 0 packets, Symbol: 0 packets
+      Overrun: 0 packets, InRangeLength: 0 packets
+      LongPacket: 0 packets, Jabber: 0 packets, Alignment: 0 packets
+      Fragment: 0 packets, Undersized Frame: 0 packets
+      RxPause: 0 packets
+    Output:
+      Unicast: 3817920229 packets, Multicast: 118027098 packets
+      Broadcast: 11668869 packets, JumboOctets: 8395236 packets
+      Lost: 0 packets, Overflow: 0 packets, Underrun: 0 packets
+      System: 0 packets, Overruns: 0 packets
+      TxPause: 0 packets
+    Local fault: normal, Remote fault: normal.
+    Last 300 seconds input utility rate:  0.01%
+    Last 300 seconds output utility rate: 0.01%
+
+GigabitEthernet1/0/1 current state : UP (ifindex: 29)
+Line protocol current state : UP
+Last line protocol up time : 2022-09-27 00:54:00-04:00
+Link quality grade : GOOD
+Description: To_HUA_DRTE_P_2 10GE10/0/16 "FO RR-308 FDP PNL-2E Pos 15 y 16"
+Route Port,The Maximum Transmit Unit is 9194
+Internet Address is 172.23.235.161/31
+IP Sending Frames' Format is PKTFMT_ETHNT_2, Hardware address is dc99-140d-5341
+The Vendor PN is MTRS-02X13-G
+The Vendor Name is HG GENUINE
+Port BW: 10G, Transceiver max BW: 10G, Transceiver Mode: SingleMode
+WaveLength: 1310nm, Transmission Distance: 10km
+Rx Power:  -6.01dBm, Warning range: [-14.400,  0.499]dBm
+Tx Power:  -3.25dBm, Warning range: [-8.198,  0.499]dBm
+Loopback: none, LAN full-duplex mode, Pause Flowcontrol: Receive Enable and Send Enable
+Last physical up time   : 2022-09-27 00:54:00-04:00
+Last physical down time : 2022-09-27 00:37:18-04:00
+Current system time: 2023-09-09 19:08:17-04:00
+Statistics last cleared:never
+    Last 300 seconds input rate: 242524 bits/sec, 256 packets/sec
+    Last 300 seconds output rate: 124571 bits/sec, 126 packets/sec
+    Input peak rate 2733933 bits/sec, Record time: 2022-07-31 06:24:51-04:00
+    Output peak rate 263570 bits/sec, Record time: 2022-07-31 06:24:51-04:00
+    Input: 876482711974 bytes, 8945614727 packets
+    Output: 396744651767 bytes, 3956488458 packets
+    Input:
+      Unicast: 8811863201 packets, Multicast: 133751510 packets
+      Broadcast: 16 packets, JumboOctets: 9667915 packets
+      CRC: 0 packets, Symbol: 0 packets
+      Overrun: 0 packets, InRangeLength: 0 packets
+      LongPacket: 0 packets, Jabber: 0 packets, Alignment: 0 packets
+      Fragment: 0 packets, Undersized Frame: 0 packets
+      RxPause: 0 packets
+    Output:
+      Unicast: 3833357799 packets, Multicast: 111461775 packets
+      Broadcast: 11668884 packets, JumboOctets: 8406990 packets
+      Lost: 0 packets, Overflow: 0 packets, Underrun: 0 packets
+      System: 0 packets, Overruns: 0 packets
+      TxPause: 0 packets
+    Local fault: normal, Remote fault: normal.
+    Last 300 seconds input utility rate:  0.01%
+    Last 300 seconds output utility rate: 0.01%
+
+GigabitEthernet1/0/1.50 current state : UP (ifindex: 65)
+Line protocol current state : DOWN
+Link quality grade : GOOD
+Description:
+Route Port,The Maximum Transmit Unit is 1500
+Internet protocol processing : disabled
+IP Sending Frames' Format is PKTFMT_ETHNT_2, Hardware address is dc99-140d-5341
+Current system time: 2023-09-09 19:08:17-04:00
+    Last 300 seconds input rate 0 bits/sec, 0 packets/sec
+    Last 300 seconds output rate 0 bits/sec, 0 packets/sec
+    Input: 0 packets,0 bytes
+           0 unicast,0 broadcast,0 multicast
+           0 errors,0 drops
+    Output:0 packets,0 bytes
+           0 unicast,0 broadcast,0 multicast
+           0 errors,0 drops
+    Last 300 seconds input utility rate:  0.00%
+    Last 300 seconds output utility rate: 0.00%
+
+GigabitEthernet1/1/0 current state : UP (ifindex: 33)
+Line protocol current state : DOWN
+Link quality grade : GOOD
+Description:
+Route Port,The Maximum Transmit Unit is 1500
+Internet protocol processing : disabled
+IP Sending Frames' Format is PKTFMT_ETHNT_2, Hardware address is dc99-140d-5331
+The Vendor PN is SFP-10G-LR-DHD
+The Vendor Name is OEM
+Port BW: 10G, Transceiver max BW: 10G, Transceiver Mode: SingleMode
+WaveLength: 1310nm, Transmission Distance: 10km
+Rx Power:  -2.42dBm, Warning range: [-15.003,  0.499]dBm
+Tx Power:  -3.16dBm, Warning range: [-7.999,  0.499]dBm
+Loopback: none, LAN full-duplex mode, Pause Flowcontrol: Receive Enable and Send Enable
+Last physical up time   : 2022-10-04 01:33:07-04:00
+Last physical down time : 2022-10-04 01:24:28-04:00
+Current system time: 2023-09-09 19:08:18-04:00
+Statistics last cleared:never
+    Last 300 seconds input rate: 587 bits/sec, 0 packets/sec
+    Last 300 seconds output rate: 85 bits/sec, 0 packets/sec
+    Input peak rate 3031 bits/sec, Record time: 2022-07-31 06:24:17-04:00
+    Output peak rate 1663 bits/sec, Record time: 2022-07-31 06:24:17-04:00
+    Input: 2587101398 bytes, 18683998 packets
+    Output: 389065152 bytes, 1164872 packets
+    Input:
+      Unicast: 0 packets, Multicast: 18683994 packets
+      Broadcast: 4 packets, JumboOctets: 0 packets
+      CRC: 0 packets, Symbol: 0 packets
+      Overrun: 0 packets, InRangeLength: 0 packets
+      LongPacket: 0 packets, Jabber: 0 packets, Alignment: 0 packets
+      Fragment: 0 packets, Undersized Frame: 0 packets
+      RxPause: 0 packets
+    Output:
+      Unicast: 0 packets, Multicast: 1164864 packets
+      Broadcast: 8 packets, JumboOctets: 0 packets
+      Lost: 0 packets, Overflow: 0 packets, Underrun: 0 packets
+      System: 0 packets, Overruns: 0 packets
+      TxPause: 0 packets
+    Local fault: normal, Remote fault: normal.
+    Last 300 seconds input utility rate:  0.01%
+    Last 300 seconds output utility rate: 0.01%
+
+GigabitEthernet1/1/2 current state : DOWN(transceiver offline) (ifindex: 35)
+Line protocol current state : DOWN
+Link quality grade : --
+Description:
+Route Port,The Maximum Transmit Unit is 1500
+Internet protocol processing : disabled
+IP Sending Frames' Format is PKTFMT_ETHNT_2, Hardware address is dc99-140d-5333
+Optical transceiver is offline!
+Port BW: 10G
+Loopback: none, LAN full-duplex mode, Pause Flowcontrol: Receive Enable and Send Enable
+Last physical up time   : -
+Last physical down time : 2022-07-31 06:24:12-04:00
+Current system time: 2023-09-09 19:08:18-04:00
+Statistics last cleared:never
+    Last 300 seconds input rate: 0 bits/sec, 0 packets/sec
+    Last 300 seconds output rate: 0 bits/sec, 0 packets/sec
+    Input peak rate 0 bits/sec, Record time: -
+    Output peak rate 0 bits/sec, Record time: -
+    Input: 0 bytes, 0 packets
+    Output: 0 bytes, 0 packets
+    Input:
+      Unicast: 0 packets, Multicast: 0 packets
+      Broadcast: 0 packets, JumboOctets: 0 packets
+      CRC: 0 packets, Symbol: 0 packets
+      Overrun: 0 packets, InRangeLength: 0 packets
+      LongPacket: 0 packets, Jabber: 0 packets, Alignment: 0 packets
+      Fragment: 0 packets, Undersized Frame: 0 packets
+      RxPause: 0 packets
+    Output:
+      Unicast: 0 packets, Multicast: 0 packets
+      Broadcast: 0 packets, JumboOctets: 0 packets
+      Lost: 0 packets, Overflow: 0 packets, Underrun: 0 packets
+      System: 0 packets, Overruns: 0 packets
+      TxPause: 0 packets
+    Local fault: normal, Remote fault: normal.
+    Last 300 seconds input utility rate:  0.00%
+    Last 300 seconds output utility rate: 0.00%
+
+LoopBack0 current state : UP (ifindex: 40)
+Line protocol current state : UP (spoofing)
+Last line protocol up time : 2022-07-31 06:20:26-04:00
+Description: "Interface Loopack ID"
+Route Port,The Maximum Transmit Unit is 1500
+Internet Address is 172.23.70.251/32
+Current system time: 2023-09-09 19:08:18-04:00
+Physical is Loopback
+    Last 300 seconds input rate 0 bits/sec, 0 packets/sec
+    Last 300 seconds output rate 0 bits/sec, 0 packets/sec
+    Input: 0 packets,0 bytes
+           0 unicast,0 broadcast,0 multicast
+           0 errors,0 drops
+    Output:0 packets,0 bytes
+           0 unicast,0 broadcast,0 multicast
+           0 errors,0 drops
+    Last 300 seconds input utility rate:  0.00%
+    Last 300 seconds output utility rate: 0.00%
+
+NULL0 current state : UP (ifindex: 1)
+Line protocol current state : UP (spoofing)
+Description:
+Route Port,The Maximum Transmit Unit is 1500
+Internet protocol processing : disabled
+Current system time: 2023-09-09 19:08:18-04:00
+Physical is NULL DEV
+    Last 300 seconds input rate 0 bits/sec, 0 packets/sec
+    Last 300 seconds output rate 0 bits/sec, 0 packets/sec
+    Input: 0 packets,0 bytes
+           0 unicast,0 broadcast,0 multicast
+           0 errors,0 drops
+    Output:0 packets,0 bytes
+           0 unicast,0 broadcast,0 multicast
+           0 errors,0 drops
+    Last 300 seconds input utility rate:  0.00%
+    Last 300 seconds output utility rate: 0.00%
+
+Virtual-Template0 current state : UP (ifindex: 25)
+Line protocol current state : UP (spoofing)
+Description:
+Route Port,The Maximum Transmit Unit is 1492, Hold timer is 10(sec)
+Internet protocol processing : disabled
+Physical is None, baudrate is 64000 bps
+Current system time: 2023-09-09 19:08:18-04:00
+    Last 300 seconds input rate 0 bits/sec, 0 packets/sec
+    Last 300 seconds output rate 0 bits/sec, 0 packets/sec
+    Input: 0 packets,0 bytes
+           0 unicast,0 broadcast,0 multicast
+           0 errors,0 drops
+    Output:0 packets,0 bytes
+           0 unicast,0 broadcast,0 multicast
+           0 errors,0 drops
+    Last 300 seconds input utility rate:  0.00%
+    Last 300 seconds output utility rate: 0.00%
+
+Vlanif320 current state : DOWN (ifindex: 60)
+Line protocol current state : DOWN
+Description: Video_VLAN
+Route Port,The Maximum Transmit Unit is 1500
+Internet protocol processing : disabled
+IP Sending Frames' Format is PKTFMT_ETHNT_2, Hardware address is 2c55-d3fb-6c1c
+Physical is VLANIF
+Current system time: 2023-09-09 19:08:18-04:00
+    Last 300 seconds input rate 0 bits/sec, 0 packets/sec
+    Last 300 seconds output rate 0 bits/sec, 0 packets/sec
+    Input: 0 packets,0 bytes
+           0 unicast,0 broadcast,0 multicast
+           0 errors,0 drops
+    Output:0 packets,0 bytes
+           0 unicast,0 broadcast,0 multicast
+           0 errors,0 drops
+    Input bandwidth utilization  : --
+    Output bandwidth utilization : --

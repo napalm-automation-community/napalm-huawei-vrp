@@ -1,0 +1,6 @@
+{
+	"FastEthernet4": [{
+		"port": "15",
+		"hostname": "twb-sf-hpsw1"
+	}]
+}
