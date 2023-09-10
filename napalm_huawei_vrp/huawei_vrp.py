@@ -1058,7 +1058,7 @@ class VRPDriver(NetworkDriver):
         bgp_neighbors = {}
 
         command_bgp_peer = "display bgp peer"
-        command_bgp_ipv6 = "display bgp ipv6 peer"
+        # command_bgp_ipv6 = "display bgp ipv6 peer"
         command_bgp_vpnv4 = "display bgp vpnv4 all peer"
         command_bgp_vpnv6 = "display bgp vpnv6 all peer"
         command_bgp_vpntarget = "display bgp vpn-target peer"

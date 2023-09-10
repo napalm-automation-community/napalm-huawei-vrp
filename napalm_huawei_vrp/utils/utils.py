@@ -7,7 +7,7 @@
 
 
 def pretty_mac(mac: str) -> str:
-    new_mac = mac.replace('-', '')
+    new_mac = mac.replace("-", "")
     two_step_mac_list = [
         new_mac[0:2],
         new_mac[2:4],
@@ -17,9 +17,9 @@ def pretty_mac(mac: str) -> str:
         new_mac[10:12],
     ]
 
-    return ':'.join(two_step_mac_list)
+    return ":".join(two_step_mac_list)
 
 
-if __name__ == '__main__':
-    res = pretty_mac('aaaa-bbbb-cccc')
+if __name__ == "__main__":
+    res = pretty_mac("aaaa-bbbb-cccc")
     print(res)

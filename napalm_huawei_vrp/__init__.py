@@ -15,4 +15,4 @@
 """napalm-skeleton package."""
 from napalm_huawei_vrp.huawei_vrp import VRPDriver
 
-__all__ = ('VRPDriver',)
+__all__ = ("VRPDriver",)
