@@ -1,0 +1,93 @@
+{
+	"Eth-Trunk10": {
+		"speed": -1.0,
+		"mtu": 1500,
+		"mac_address": "2C:55:D3:FB:6C:1C",
+		"is_up": false,
+		"last_flapped": -1.0,
+		"description": "",
+		"is_enabled": false
+	},
+	"GigabitEthernet1/0/0": {
+		"speed": -1.0,
+		"mtu": 9194,
+		"mac_address": "DC:99:14:0D:53:40",
+		"is_up": true,
+		"last_flapped": -1.0,
+		"description": "To_local_n/a_n/a_HUA_30MZ_P_2_10GE10/0/16",
+		"is_enabled": true
+	},
+	"GigabitEthernet1/0/1": {
+		"speed": -1.0,
+		"mtu": 9194,
+		"mac_address": "DC:99:14:0D:53:41",
+		"is_up": true,
+		"last_flapped": -1.0,
+		"description": "To_HUA_DRTE_P_2 10GE10/0/16 \"FO RR-308 FDP PNL-2E Pos 15 y 16\"",
+		"is_enabled": true
+	},
+	"GigabitEthernet1/0/1.50": {
+		"speed": -1.0,
+		"mtu": 1500,
+		"mac_address": "DC:99:14:0D:53:41",
+		"is_up": false,
+		"last_flapped": -1.0,
+		"description": "",
+		"is_enabled": true
+	},
+	"GigabitEthernet1/1/0": {
+		"speed": -1.0,
+		"mtu": 1500,
+		"mac_address": "DC:99:14:0D:53:31",
+		"is_up": false,
+		"last_flapped": -1.0,
+		"description": "",
+		"is_enabled": true
+	},
+	"GigabitEthernet1/1/2": {
+		"speed": -1.0,
+		"mtu": 1500,
+		"mac_address": "DC:99:14:0D:53:33",
+		"is_up": false,
+		"last_flapped": -1.0,
+		"description": "",
+		"is_enabled": false
+	},
+	"LoopBack0": {
+		"speed": -1.0,
+		"mtu": 1500,
+		"mac_address": "",
+		"is_up": true,
+		"last_flapped": -1.0,
+		"description": "\"Interface Loopack ID\"",
+		"is_enabled": true
+	},
+	"NULL0": {
+		"speed": -1.0,
+		"mtu": 1500,
+		"mac_address": "",
+		"is_up": true,
+		"last_flapped": -1.0,
+		"description": "",
+		"is_enabled": true
+	},
+	"Virtual-Template0": {
+		"speed": -1.0,
+		"mtu": 1492,
+		"mac_address": "",
+		"is_up": true,
+		"last_flapped": -1.0,
+		"description": "",
+		"is_enabled": true
+	},
+	"Vlanif320": {
+		"speed": -1.0,
+		"mtu": 1500,
+		"mac_address": "2C:55:D3:FB:6C:1C",
+		"is_up": false,
+		"last_flapped": -1.0,
+		"description": "Video_VLAN",
+		"is_enabled": false
+	}
+
+}

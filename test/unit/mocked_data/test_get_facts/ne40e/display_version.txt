@@ -1,0 +1,201 @@
+Huawei Versatile Routing Platform Software
+VRP (R) software, Version 8.211 (NE40E V800R021C10SPC600)
+Copyright (C) 2012-2022 Huawei Technologies Co., Ltd.
+HUAWEI NE40E-X8A uptime is 405 days, 12 hours, 9 minutes
+Patch Version: V800R021SPH016
+
+NE40E-X8A version information:
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+BKP  version information:
+  PCB         Version : CR57BKP08F REV A
+  MPU  Slot  Quantity : 0
+  SRU  Slot  Quantity : 2
+  SFU  Slot  Quantity : 2
+  LPU  Slot  Quantity : 8
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+MPU version information:
+
+MPU (Master) 9 : uptime is 405 days, 12 hours, 9 minutes
+  StartupTime 2022/07/31   06:20:11
+  SDRAM Memory Size   : 16384 M bytes
+  FLASH Memory Size   : 16 M bytes
+  NVRAM Memory Size   : 512 K bytes
+  CFCARD Memory Size  : 7681 M bytes
+  MPU CR5D0SRUA871 version information
+  PCB         Version : CR56RPUC REV D
+  EPLD        Version : 103
+  FRA version information
+  PCB         Version : CR57FRA1TA REV B
+  FPGA        Version : 013
+  BootROM     Version : 06.15
+  BootLoad    Version : 06.15
+  MonitorBUS version information:
+  Software    Version : 48.48
+
+MPU (Slave) 10 : uptime is 405 days, 12 hours, 7 minutes
+  StartupTime 2022/07/31   06:21:39
+  SDRAM Memory Size   : 16384 M bytes
+  FLASH Memory Size   : 16 M bytes
+  NVRAM Memory Size   : 512 K bytes
+  CFCARD Memory Size  : 7681 M bytes
+  MPU CR5D0SRUA871 version information
+  PCB         Version : CR56RPUC REV D
+  EPLD        Version : 103
+  FRA version information
+  PCB         Version : CR57FRA1TA REV B
+  FPGA        Version : 013
+  BootROM     Version : 06.15
+  BootLoad    Version : 06.15
+  MonitorBUS version information:
+  Software    Version : 48.48
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+LPU/SPU version information:
+
+LPU 1 : uptime is 405 days, 12 hours, 5 minutes
+  StartupTime 2022/07/31   06:23:30
+  Host processor :
+  SDRAM Memory Size   : 4096 M bytes
+  Flash Memory Size   : 128 M bytes
+  LPU CR5DLAXFAJ7F version information:
+  PCB Version         : CR57LPUF120A REV C
+  EPLD Version        : 102
+  FPGA Version        : 103
+  NP Version          : 100
+  TM Version          : 110
+  BootROM Version     : 06.15
+  BootLoad Version    : 06.15
+  NSE version information:
+  PCB Version         : NSE REV A
+  PIC0:CR57L5XFI3 version information
+  StartupTime         : 2022/07/31    06:23:54
+  PCB Version         : CR57L5XFI REV A
+  FPGA Version        : 102
+  CHIP Version        : 110
+  PIC1:CR57L5XFI3 version information
+  StartupTime         : 2022/07/31    06:24:12
+  PCB Version         : CR57L5XFI REV A
+  FPGA Version        : 102
+  CHIP Version        : 110
+  MonitorBUS version information:
+  Software Version : 50.50
+  Configure license items:
+  NULL
+
+VSU 4 : uptime is 405 days, 11 hours, 54 minutes
+  StartupTime 2022/07/31   06:35:12
+  Host processor :
+  SDRAM Memory Size   : 4096 M bytes
+  Flash Memory Size   : 128 M bytes
+  VSU CR5DVSUFD010 version information:
+  PCB Version         : CR57VSUF160 REV B
+  EPLD Version        : 112
+  EPLD2 Version       : 107
+  EPLD3 Version       : 103
+  NP Version          : 100
+  TM Version          : 110
+  BootROM Version     : 06.15
+  BootLoad Version    : 06.15
+  NSE version information:
+  PCB Version         : NSE REV A
+  MonitorBUS version information:
+  Software Version : 50.50
+  Configure license items:
+  NULL
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+SFU version information:
+
+SFU 11 : uptime is 405 days, 12 hours, 7 minutes
+  StartupTime 2022/07/31   06:21:21
+  SDRAM Memory Size   : 1024 M bytes
+  Flash Memory Size   : 64 M bytes
+  SFU CR5DSFUIM07C version information:
+  PCB         Version : CR57SFU1TC REV A
+  EPLD        Version : 103
+  BootROM     Version : 03.48
+  BootLoad    Version : 03.48
+  MonitorBUS version information:
+  Software Version : 50.50
+
+SFU 12 : uptime is 405 days, 12 hours, 7 minutes
+  StartupTime 2022/07/31   06:21:54
+  SDRAM Memory Size   : 1024 M bytes
+  Flash Memory Size   : 64 M bytes
+  SFU CR5DSFUIM07C version information:
+  PCB         Version : CR57SFU1TC REV A
+  EPLD        Version : 103
+  BootROM     Version : 03.48
+  BootLoad    Version : 03.48
+  MonitorBUS version information:
+  Software Version : 50.50
+
+SFU 13 : uptime is 405 days, 12 hours, 7 minutes
+  StartupTime 2022/07/31   06:21:49
+  SDRAM Memory Size   : 1024 M bytes
+  Flash Memory Size   : 64 M bytes
+  SFU CR5D0SRUA871 version information:
+  PCB         Version : CR57CTLA REV A
+  EPLD        Version : 103
+  BootROM     Version : 03.48
+  BootLoad    Version : 03.48
+  MonitorBUS version information:
+  Software Version : 48.48
+
+SFU 14 : uptime is 405 days, 12 hours, 7 minutes
+  StartupTime 2022/07/31   06:21:49
+  SDRAM Memory Size   : 1024 M bytes
+  Flash Memory Size   : 64 M bytes
+  SFU CR5D0SRUA871 version information:
+  PCB         Version : CR57CTLA REV A
+  EPLD        Version : 103
+  BootROM     Version : 03.48
+  BootLoad    Version : 03.48
+  MonitorBUS version information:
+  Software Version : 48.48
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+CLK version information:
+
+CLK 15 : uptime is 405 days, 12 hours, 8 minutes
+  StartupTime 2022/07/31   06:20:30
+  FPGA     Version : 003
+  DSP      Version : 10205018
+
+CLK 16 : uptime is 405 days, 12 hours, 7 minutes
+  StartupTime 2022/07/31   06:21:55
+  FPGA     Version : 003
+  DSP      Version : 10205018
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Power version information:
+
+POWER 17 MonitorBUS version information:
+  PM 1 version information:
+  PCB      Version : PDC-2200WB REV A
+  Software Version : 2.4
+  PM 2 version information:
+  PCB      Version : PDC-2200WB REV A
+  Software Version : 2.4
+  PM 3 version information:
+  PCB      Version : PDC-2200WB REV A
+  Software Version : 2.4
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+FAN version information:
+
+FAN 19 MonitorBUS version information:
+  PCB      Version : CR56FCBJ REV D
+  Software Version : 5.21
+
+FAN 20 MonitorBUS version information:
+  PCB      Version : CR56FCBJ REV D
+  Software Version : 5.21
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+PMU version information:
+
+PMU 22 MonitorBUS version information:
+  PCB      Version : CR56PMUA REV A
+  Software Version : 41.15
+
+PMU 23 MonitorBUS version information:
+  PCB      Version : CR56PMUA REV A
+  Software Version : 41.15
