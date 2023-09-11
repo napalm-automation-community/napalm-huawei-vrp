@@ -34,6 +34,7 @@ from datetime import datetime
 from napalm.base import NetworkDriver
 from napalm.base.netmiko_helpers import netmiko_args
 from napalm.base.exceptions import (
+    ConnectionException,
     MergeConfigException,
     ReplaceConfigException,
     CommandErrorException,
