@@ -191,7 +191,7 @@ class VRPDriver(NetworkDriver):
 
         for command in commands:
             output = self.device.send_command(command)
-            # output = self.device.send_command(command, read_timeout=25.0)
+            # output = self.device.send_command(command)
             cli_output.setdefault(command, {})
             cli_output[command] = output
 
@@ -415,7 +415,7 @@ class VRPDriver(NetworkDriver):
 
         if retrieve.lower() in ('running', 'all'):
             command = 'display current-configuration'
-            config['running'] = self.device.send_command(command, read_timeout=25.0)
+            config['running'] = self.device.send_command(command)
             
         if retrieve.lower() in ('startup', 'all'):
             # command = 'display saved-configuration last'
