@@ -25,11 +25,10 @@ import re
 import telnetlib
 import os
 import tempfile
-import paramiko
 import uuid
 import hashlib
-import napalm.base.helpers
-import napalm.base.constants as c
+from napalm.base.helpers import mac
+import napalm.base.constants as C
 
 from datetime import datetime
 from napalm.base import NetworkDriver
@@ -440,12 +439,7 @@ class VRPDriver(NetworkDriver):
     # developing
     def load_replace_candidate(self, filename=None, config=None):
         """Open the candidate config and replace."""
-        if not filename and not config:
-            raise ReplaceConfigException("filename or config param must be provided.")
-
-        self._replace_candidate(filename, config)
-        self.replace = True
-        self.loaded = True
+        pass
 
     # ok
     def commit_config(self, message=""):
@@ -504,12 +498,12 @@ class VRPDriver(NetworkDriver):
     def ping(
         self,
         destination,
-        source=c.PING_SOURCE,
-        ttl=c.PING_TTL,
-        timeout=c.PING_TIMEOUT,
-        size=c.PING_SIZE,
-        count=c.PING_COUNT,
-        vrf=c.PING_VRF,
+        source=C.PING_SOURCE,
+        ttl=C.PING_TTL,
+        timeout=C.PING_TIMEOUT,
+        size=C.PING_SIZE,
+        count=C.PING_COUNT,
+        vrf=C.PING_VRF,
     ):
         """Execute ping on the device."""
         ping_dict = {}
@@ -631,7 +625,7 @@ class VRPDriver(NetworkDriver):
             match_mac = re.search(re_mac, interface, flags=re.M)
             if match_mac:
                 mac_address = match_mac.group("mac_address")
-                mac_address = napalm.base.helpers.mac(mac_address)
+                mac_address = mac(mac_address)
             else:
                 mac_address = ""
 
@@ -1008,7 +1002,7 @@ class VRPDriver(NetworkDriver):
 
         for mac_info in match:
             mac_dict = {
-                "mac": napalm.base.helpers.mac(mac_info[0]),
+                "mac": mac(mac_info[0]),
                 "interface": mac_info[2],
                 "vlan": int(mac_info[1]),
                 "static": True if mac_info[3] == "static" else False,
@@ -2026,53 +2020,6 @@ class VRPDriver(NetworkDriver):
         if search_result is None:
             msg = "Failed to load config. Command output:{}".format(rollback_result)
             raise CommandErrorException(msg)
-
-    def _replace_candidate(self, filename, config):
-        if not filename:
-            filename = self._create_tmp_file(config)
-        else:
-            if not os.path.isfile(filename):
-                raise ReplaceConfigException("File {} not found".format(filename))
-
-        self.replace_file = filename
-
-        if not self._enough_space(self.replace_file):
-            msg = "Could not transfer file. Not enough space on device."
-            raise ReplaceConfigException(msg)
-
-        need_transfer = True
-        if self._check_file_exists(self.replace_file):
-            if self._check_md5(self.replace_file):
-                need_transfer = False
-        if need_transfer:
-            dest = os.path.basename(self.replace_file)
-            # full_remote_path = 'flash:/{}'.format(dest)
-            with paramiko.SSHClient() as ssh:
-                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                ssh.connect(
-                    hostname=self.hostname,
-                    username=self.username,
-                    password=self.password,
-                    port=self.port,
-                    look_for_keys=False,
-                )
-
-                try:
-                    with paramiko.SFTPClient.from_transport(
-                        ssh.get_transport()
-                    ) as sftp_client:
-                        sftp_client.put(self.replace_file, dest)
-                    # with SCPClient(ssh.get_transport()) as scp_client:
-                    #     scp_client.put(self.replace_file, dest)
-                except Exception as e:
-                    msg = (
-                        "Could not transfer file. There was an error during transfer:"
-                        + str(e)
-                    )
-                    raise ReplaceConfigException(msg)
-        self.config_replace = True
-        if config and os.path.isfile(self.replace_file):
-            os.remove(self.replace_file)
 
     def _verify_remote_file_exists(self, dst, file_system="flash:"):
         command = "dir {0}/{1}".format(file_system, dst)
