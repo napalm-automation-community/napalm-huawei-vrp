@@ -39,7 +39,7 @@ from napalm.base.exceptions import (
     CommandErrorException,
     CommitError,
 )
-from .utils.utils import pretty_mac
+from .utils.utils import pretty_mac, SafeList
 
 # Easier to store these as constants
 HOUR_SECONDS = 3600
@@ -783,27 +783,26 @@ class VRPDriver(NetworkDriver):
                 raise ValueError(msg)
 
             intf_name = match_intf.group("intf_name")
-            match_errors = re.findall(re_errors, interface, flags=re.M)
-            match_unicast = re.findall(re_unicast, interface, flags=re.M)
-            match_multicast = re.findall(re_multicast, interface, flags=re.M)
-            match_broadcast = re.findall(re_broadcast, interface, flags=re.M)
-            match_discards = re.findall(re_dicards, interface, flags=re.M)
-            match_rx_octets = re.findall(re_rx_octets, interface, flags=re.M)
-            match_tx_octets = re.findall(re_tx_octets, interface, flags=re.M)
-
+            match_errors = SafeList(re.findall(re_errors, interface, flags=re.M))
+            match_unicast = SafeList(re.findall(re_unicast, interface, flags=re.M))
+            match_multicast = SafeList(re.findall(re_multicast, interface, flags=re.M))
+            match_broadcast = SafeList(re.findall(re_broadcast, interface, flags=re.M))
+            match_discards = SafeList(re.findall(re_dicards, interface, flags=re.M))
+            match_rx_octets = SafeList(re.findall(re_rx_octets, interface, flags=re.M))
+            match_tx_octets = SafeList(re.findall(re_tx_octets, interface, flags=re.M))
             intf_counter = {
-                "tx_errors": match_errors.get(0, -1),
-                "rx_errors": match_errors.get(1, -1),
-                "tx_discards": match_discards.get(0, -1),
-                "rx_discards": match_discards.get(1, -1),
-                "tx_octets": match_tx_octets.get(0, -1),
-                "rx_octets": match_rx_octets.get(0, -1),
-                "tx_unicast_packets": match_unicast.get(0, -1),
-                "rx_unicast_packets": match_unicast.get(1, -1),
-                "tx_multicast_packets": match_multicast.get(0, -1),
-                "rx_multicast_packets": match_multicast.get(1, -1),
-                "tx_broadcast_packets": match_broadcast.get(0, -1),
-                "rx_broadcast_packets": match_broadcast.get(1, -1),
+                "tx_errors": int(match_errors.get_not_none(0, -1)),
+                "rx_errors": int(match_errors.get_not_none(1, -1)),
+                "tx_discards": int(match_discards.get_not_none(0, -1)),
+                "rx_discards": int(match_discards.get_not_none(1, -1)),
+                "tx_octets": int(match_tx_octets.get_not_none(0, -1)),
+                "rx_octets": int(match_rx_octets.get_not_none(0, -1)),
+                "tx_unicast_packets": int(match_unicast.get_not_none(0, -1)),
+                "rx_unicast_packets": int(match_unicast.get_not_none(1, -1)),
+                "tx_multicast_packets": int(match_multicast.get_not_none(0, -1)),
+                "rx_multicast_packets": int(match_multicast.get_not_none(1, -1)),
+                "tx_broadcast_packets": int(match_broadcast.get_not_none(0, -1)),
+                "rx_broadcast_packets": int(match_broadcast.get_not_none(1, -1)),
             }
 
             interfaces.update({intf_name: intf_counter})
