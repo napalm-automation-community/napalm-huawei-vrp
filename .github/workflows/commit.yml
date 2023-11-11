@@ -1,0 +1,45 @@
+---
+name: Build and Test
+on: [push, pull_request]
+permissions:
+  contents: read
+
+jobs:
+  std_tests:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 2
+      matrix:
+        python-version: [3.8, 3.9, 3.11]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -e .
+          pip3 install -r requirements.txt
+          pip3 install -r requirements-dev.txt
+
+      - name: Run black
+        run: |
+          black --check .
+
+      - name: Run linter
+        run: |
+          pylama .
+
+      - name: Run type checker
+        run: |
+          mypy -p napalm_huawei_vrp --config-file mypy.ini
+
+      # - name: Run Tests
+      #   run: |
+      #     py.test --cov=napalm --cov-report term-missing -vs --pylama
