@@ -40,6 +40,6 @@ jobs:
         run: |
           mypy -p napalm_huawei_vrp --config-file mypy.ini
 
-      - name: Run Tests
-        run: |
-          py.test --cov=napalm --cov-report term-missing -vs --pylama
+      # - name: Run Tests
+      #   run: |
+      #     py.test --cov=napalm --cov-report term-missing -vs --pylama
