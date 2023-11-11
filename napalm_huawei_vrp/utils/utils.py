@@ -20,6 +20,23 @@ def pretty_mac(mac: str) -> str:
     return ":".join(two_step_mac_list)
 
 
+class SafeList(list):
+    def get(self, index, default=None):
+        try:
+            return self.__getitem__(index)
+        except IndexError:
+            return default
+
+    def get_not_none(self, index, default=None):
+        try:
+            value = self.__getitem__(index)[0]
+            if not value:
+                value = self.__getitem__(index)[1]
+            return value
+        except IndexError:
+            return default
+
+
 if __name__ == "__main__":
     res = pretty_mac("aaaa-bbbb-cccc")
     print(res)
