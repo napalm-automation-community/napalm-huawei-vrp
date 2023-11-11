@@ -752,15 +752,8 @@ class VRPDriver(NetworkDriver):
 
         return interfaces_ip
 
-    # verified
     def get_interfaces_counters(self):
         """Return interfaces counters."""
-
-        def process_counts(tup):
-            for item in tup:
-                if item != "":
-                    return int(item)
-            return 0
 
         interfaces = {}
         # command "display interface counters" lacks of some keys
@@ -788,55 +781,30 @@ class VRPDriver(NetworkDriver):
             if match_intf is None:
                 msg = "Unexpected interface format: {}".format(interface)
                 raise ValueError(msg)
+
             intf_name = match_intf.group("intf_name")
+            match_errors = re.findall(re_errors, interface, flags=re.M)
+            match_unicast = re.findall(re_unicast, interface, flags=re.M)
+            match_multicast = re.findall(re_multicast, interface, flags=re.M)
+            match_broadcast = re.findall(re_broadcast, interface, flags=re.M)
+            match_discards = re.findall(re_dicards, interface, flags=re.M)
+            match_rx_octets = re.findall(re_rx_octets, interface, flags=re.M)
+            match_tx_octets = re.findall(re_tx_octets, interface, flags=re.M)
+
             intf_counter = {
-                "tx_errors": 0,
-                "rx_errors": 0,
-                "tx_discards": 0,
-                "rx_discards": 0,
-                "tx_octets": 0,
-                "rx_octets": 0,
-                "tx_unicast_packets": 0,
-                "rx_unicast_packets": 0,
-                "tx_multicast_packets": 0,
-                "rx_multicast_packets": 0,
-                "tx_broadcast_packets": 0,
-                "rx_broadcast_packets": 0,
+                "tx_errors": match_errors.get(0, -1),
+                "rx_errors": match_errors.get(1, -1),
+                "tx_discards": match_discards.get(0, -1),
+                "rx_discards": match_discards.get(1, -1),
+                "tx_octets": match_tx_octets.get(0, -1),
+                "rx_octets": match_rx_octets.get(0, -1),
+                "tx_unicast_packets": match_unicast.get(0, -1),
+                "rx_unicast_packets": match_unicast.get(1, -1),
+                "tx_multicast_packets": match_multicast.get(0, -1),
+                "rx_multicast_packets": match_multicast.get(1, -1),
+                "tx_broadcast_packets": match_broadcast.get(0, -1),
+                "rx_broadcast_packets": match_broadcast.get(1, -1),
             }
-
-            match = re.findall(re_errors, interface, flags=re.M)
-            if match:
-                intf_counter["rx_errors"] = process_counts(match[0])
-            if len(match) == 2:
-                intf_counter["tx_errors"] = process_counts(match[1])
-
-            match = re.findall(re_dicards, interface, flags=re.M)
-            if len(match) == 2:
-                intf_counter["rx_discards"] = process_counts(match[0])
-                intf_counter["tx_discards"] = process_counts(match[1])
-
-            match = re.findall(re_unicast, interface, flags=re.M)
-            if len(match) == 2:
-                intf_counter["rx_unicast_packets"] = process_counts(match[0])
-                intf_counter["tx_unicast_packets"] = process_counts(match[1])
-
-            match = re.findall(re_multicast, interface, flags=re.M)
-            if len(match) == 2:
-                intf_counter["rx_multicast_packets"] = process_counts(match[0])
-                intf_counter["tx_multicast_packets"] = process_counts(match[1])
-
-            match = re.findall(re_broadcast, interface, flags=re.M)
-            if len(match) == 2:
-                intf_counter["rx_broadcast_packets"] = process_counts(match[0])
-                intf_counter["tx_broadcast_packets"] = process_counts(match[1])
-
-            match = re.findall(re_rx_octets, interface, flags=re.M)
-            if match:
-                intf_counter["rx_octets"] = process_counts(match[0])
-
-            match = re.findall(re_tx_octets, interface, flags=re.M)
-            if match:
-                intf_counter["tx_octets"] = process_counts(match[0])
 
             interfaces.update({intf_name: intf_counter})
         return interfaces
@@ -1048,7 +1016,7 @@ class VRPDriver(NetworkDriver):
                 }
             }
         }
-        """
+
         bgp_neighbors = {}
 
         command_bgp_peer = "display bgp peer"
@@ -1708,6 +1676,8 @@ class VRPDriver(NetworkDriver):
                         )
 
         return bgp_neighbors
+        """
+        pass
 
     # develop
     def get_bgp_neighbors_detail(self):

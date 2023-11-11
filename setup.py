@@ -1,7 +1,5 @@
 """setup.py file."""
 from setuptools import setup, find_packages
-import subprocess
-
 
 with open("requirements.txt", "r") as fs:
     reqs = [r for r in fs.read().splitlines() if (len(r) > 0 and not r.startswith("#"))]
