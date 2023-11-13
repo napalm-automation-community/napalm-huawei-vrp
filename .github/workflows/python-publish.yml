@@ -1,39 +1,31 @@
-# This workflow will upload a Python Package using Twine when a release is created
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python#publishing-to-package-registries
-
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
-name: Upload Python Package
-
+name: Publish Python Package
 on:
-  release:
-    types: [published]
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+      - '*'
 
 permissions:
   contents: read
 
 jobs:
   deploy:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v4
       with:
         python-version: '3.x'
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install build
-    - name: Build package
-      run: python -m build
-    - name: Publish package
-      uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
+        pip install setuptools wheel
+    - name: Build
+      run: |
+        python setup.py sdist bdist_wheel
+    - name: Publish
+      uses: pypa/gh-action-pypi-publish@master
       with:
-        user: dbarroso
-        password: IIifRr9K771snku+qI7yz8T/cJC4ZO/fUYUNILhMB5eQtF2/MAEU7W1owGfcIqE9SW7fhPAXqVrnb7AcdFyjjbkZn6uoYYlh5LrQaCXgbfol5Yg+OSsRKFwhEOBcKFrtqz3W6UPunN6CX4v2gn2UCmWSyQ3XERgqKxobBVSOMb1G9PTy/Zk0ZUvGJc05bxWj3xuVQKg904VpnhQJ6q1h4d9SV+dQClP4eDRbEwe+ICKX3S2JPa/PiJfWrIsCL12yT+iZ/aiDwfSBjh+o3HMdt98cB3FkHAibEZnvpLOpUCmjX1rMyqyJEqVgDM1mQ4vyoYO5DNFv94ZufGJnJP+TIbkkSaFy9ZpeC2V+7K03TM+g1rZD3BKK50u3kL86KsHao14SZHV58l7/b3023IUr4MwrQgoLlHMhw9IFFC8bYmP/6aylae5fR/+5inGloSByzWLAKKQ0FLPPkCoeukmldyphjZ8HnGdhEu566kO9R5gxJ4edsbeimsRAO3oZ/EByQcgOytJjVKjMpn7fhiSblJO8KB4+M5d5fXUn5RZ31P3g8RFfG1Jqx2l9eOd4i8u9l3NkRd9WO8q5wyF/hvC/u4RcIMnRYl5hPWMBNY6uGGj7aq7o+XETTLVFirCwHBKre6OLdaVpW1ZciJP07Xb9qhyPLCeP3E9VM/OAz9rs5KI=
+        user: __token__
+        password: ${{ secrets.PYPI_TOKEN }}

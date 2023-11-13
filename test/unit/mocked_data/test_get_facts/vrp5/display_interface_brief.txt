@@ -1,0 +1,39 @@
+PHY: Physical
+*down: administratively down
+^down: standby
+(l): loopback
+(s): spoofing
+(E): E-Trunk down
+(b): BFD down
+(B): Bit-error-detection down
+(e): ETHOAM down
+(d): Dampening Suppressed
+(p): port alarm down
+(ld): loop-detect trigger down
+(mf): mac-flapping blocked
+(c): CFM down
+(sd): STP instance discarding
+InUti/OutUti: input utility/output utility
+Interface                   PHY   Protocol  InUti OutUti   inErrors  outErrors
+Eth-Trunk10                 down  down         0%     0%          0          0
+Eth-Trunk10.25              down  down         0%     0%          0          0
+GigabitEthernet0/0/0        *down down         0%     0%          0          0
+GigabitEthernet1/0/0(10G)   up    up        0.01%  0.01%          0          0
+GigabitEthernet1/0/1(10G)   up    up        0.01%  0.01%          0          0
+GigabitEthernet1/0/1.50(10G) up    down         0%     0%          0          0
+GigabitEthernet1/0/2(10G)   down  down         0%     0%          0          0
+GigabitEthernet1/0/3(10G)   down  down         0%     0%          0          0
+GigabitEthernet1/0/4(10G)   down  down         0%     0%          0          0
+GigabitEthernet1/1/0(10G)   up    down      0.01%  0.01%          0          0
+GigabitEthernet1/1/1(10G)   up    down      0.01%  0.01%          0          0
+GigabitEthernet1/1/2(10G)   down  down         0%     0%          0          0
+GigabitEthernet1/1/3(10G)   down  down         0%     0%          0          0
+GigabitEthernet1/1/4(10G)   down  down         0%     0%          0          0
+LoopBack0                   up    up(s)        0%     0%          0          0
+LoopBack1                   up    up(s)        0%     0%          0          0
+LoopBack69                  up    up(s)        0%     0%          0          0
+LoopBack2147483647          up    up(s)        0%     0%          0          0
+NULL0                       up    up(s)        0%     0%          0          0
+Virtual-Template0           up    up(s)        0%     0%          0          0
+Vlanif322                   down  down         --     --          0          0
+

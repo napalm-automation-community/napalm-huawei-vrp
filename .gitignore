@@ -71,3 +71,11 @@ test/test_pypi.py
 test/test.py
 test/unit/develop_test.py
 
+# Python Virtual Env
+venv_*
+
+# mypy
+.mypy_cache/
+
+# VSCODE
+.vscode/
