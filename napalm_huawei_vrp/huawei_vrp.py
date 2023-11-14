@@ -742,6 +742,13 @@ class VRPDriver(NetworkDriver):
             # v4_interfaces[intf_name] = {}
             match_ip = re.findall(re_intf_ip, interface, flags=re.M)
 
+            if len(match_ip) == 0:
+                re_intf_ip = r"Internet Address is negotiated,\s+(?P<ip_address>\d+.\d+.\d+.\d+)\/(?P<prefix_length>\d+)"
+                match_ip = re.findall(re_intf_ip, interface, flags=re.M)
+                if len(match_ip) == 0:
+                    re_intf_ip = r"Internet Address is allocated by DHCP,\s+(?P<ip_address>\d+.\d+.\d+.\d+)\/(?P<prefix_length>\d+)"
+                    match_ip = re.findall(re_intf_ip, interface, flags=re.M)
+
             for ip_info in match_ip:
                 val = {"prefix_length": int(ip_info[1])}
                 # v4_interfaces[intf_name][ip_info[0]] = val
