@@ -612,6 +612,8 @@ class VRPDriver(NetworkDriver):
         re_mac = r"Hardware address is\W+(?P<mac_address>\S+)"
         re_speed = r"^Speed\W+(?P<speed>\d+|\w+)"
         re_description = r"Description:(?:(?:)|(?P<description>.*))\n"
+        re_speed_eth_ce = r"Current BW : +(?P<speed>\d+)"
+        re_speed_eth_ar = r"Current BW: +(?P<speed>\d+)"
         re_mtu = r"Maximum Transmit Unit(?:(?:\(L3\))|(?:)) is (?P<int_mtu>\d+)"
 
         new_interfaces = self._separate_section(separator, output)
@@ -651,6 +653,16 @@ class VRPDriver(NetworkDriver):
                 speed = match_speed.group("speed")
                 if speed.isdigit():
                     speed = float(speed)
+            match_speed_eth_ar = re.findall(re_speed_eth_ar, interface, flags=re.M)
+            
+            if match_speed_eth_ar:
+                if match_speed_eth_ar[0].isdigit():
+                    speed = float(match_speed_eth_ar[0]) * 1000
+            
+            match_speed_eth_ce = re.findall(re_speed_eth_ce, interface, flags=re.M)
+            if match_speed_eth_ce:
+                if match_speed_eth_ce[0].isdigit():
+                    speed = float(match_speed_eth_ce[0]) * 1000
 
             # description matching
             description = ""
