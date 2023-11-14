@@ -616,6 +616,8 @@ class VRPDriver(NetworkDriver):
                 msg = "Unexpected interface format: {}".format(interface)
                 raise ValueError(msg)
             intf_name = match_intf.group("intf_name")
+            if intf_name == 'Dialer1:0':
+                continue
             intf_state = match_intf.group("intf_state")
             is_enabled = bool("up" in intf_state.lower())
 
