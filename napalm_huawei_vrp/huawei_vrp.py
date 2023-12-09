@@ -139,7 +139,7 @@ class VRPDriver(NetworkDriver):
         self.prompt_quiet_configured = None
 
         # Contextual diff computation mode
-        self.contextual_diff = optional_args.get('contextual_diff', False)
+        self.contextual_diff = optional_args.get("contextual_diff", False)
 
     # verified
     def open(self):
@@ -2078,7 +2078,7 @@ class VRPDriver(NetworkDriver):
         return "\n".join(diff)
 
     def _get_contextual_diff(self):
-        running_config = self.get_config(retrieve='running')['running']
+        running_config = self.get_config(retrieve="running")["running"]
         running_config = IndentedConfig(running_config, sanitize=True)
         merge_candidate = IndentedConfig(self.merge_candidate, sanitize=True)
         diff = IncrementalDiff(merge_candidate, running_config)
