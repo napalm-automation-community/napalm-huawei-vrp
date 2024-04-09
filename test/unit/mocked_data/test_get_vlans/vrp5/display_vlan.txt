@@ -1,0 +1,16 @@
+The total number of VLANs is: 2
+--------------------------------------------------------------------------------
+U: Up;         D: Down;         TG: Tagged;         UT: Untagged;
+MP: Vlan-mapping;               ST: Vlan-stacking;
+#: ProtocolTransparent-vlan;    *: Management-vlan;
+--------------------------------------------------------------------------------
+
+VID  Type    Ports                                                          
+--------------------------------------------------------------------------------
+1    common  UT:100GE0/0/3(D)   100GE0/0/4(D)   XGE0/0/5(U)     XGE0/0/6(U)     
+                XGE0/0/11(D)    XGE0/0/12(D)    XGE0/0/13(D)    XGE0/0/14(D)    
+                XGE0/0/15(D)    XGE0/0/16(D)    XGE0/0/17(D)    XGE0/0/18(D)    
+                XGE0/0/19(D)    XGE0/0/20(D)    XGE0/0/21(D)    XGE0/0/22(D)    
+                XGE0/0/23(D)    XGE0/0/24(U)                                    
+32   common  TG:100GE0/0/5(U)   XGE0/0/10(U)                                    
+45   common  TG:100GE0/0/5(U)   XGE0/0/6(U)
