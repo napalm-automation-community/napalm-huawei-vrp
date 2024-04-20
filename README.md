@@ -119,6 +119,109 @@ device.get_interfaces_counters()
 device.get_lldp_neighbors()
 
 ```
+
+## Merging Configuration and Diff Modes
+
+The driver supports two diff modes when merging configuration:
+
+* **non-contextual diff** (default behavior)
+* **contextual diff** (as proposed in PR [#23](https://github.com/napalm-automation-community/napalm-huawei-vrp/pull/23))
+
+The second mode can be set during driver instantiation:
+
+```py
+from napalm import get_network_driver
+
+driver = get_network_driver('huawei_vrp')
+device = driver(
+    hostname='192.168.76.10',
+    username='admin',
+    password='this_is_not_a_secure_password',
+    optional_args={'contextual_diff': True}  # enable contextual diff mode
+)
+device.open()
+
+# Merging Configuration
+device.load_merge_candidate(config=candidate)  # candidate is an str
+print(device.compare_config())
+```
+
+The contextual mode is smarter as **it computes the diff per config section.** You might want to enable it.
+
+### Example
+
+Say we have these configs:
+
+<table>
+ <thead>
+  <tr>
+   <th>Candidate (to merge into the running)</th>
+   <th>Running (extract only)</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+
+```sh
+#
+interface GigabitEthernet0/0/2
+ undo portswitch
+ undo shutdown
+ l2 binding vsi CUST
+#
+bgp 1234
+ router-id 1.2.3.4
+ ipv4-family vpn-instance SOME-VPN
+  import-route direct
+#
+```
+   </td>
+   <td>
+
+```sh
+#
+interface GigabitEthernet0/0/1
+ description CustomerA
+ undo portswitch
+ l2 binding vsi CUST
+#
+interface GigabitEthernet0/0/2
+ description CustomerB
+ shutdown
+#
+bgp 1234
+ router-id 1.2.3.4
+ ipv4-family vpn-instance SOME-VPN
+  import-route static
+#
+```
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+`device.compare_config()` will result in:
+
+```sh
+# Non-contextual diff (default mode)
+
+ undo shutdown
+  import-route direct
+```
+
+```diff
+# Contextual diff
+
+ interface GigabitEthernet0/0/2
++ undo portswitch
++ undo shutdown
++ l2 binding vsi CUST
+ bgp 1234
+  ipv4-family vpn-instance SOME-VPN
++  import-route direct
+```
+
 ## Contact
 ### Slack
 
