@@ -125,7 +125,7 @@ device.get_lldp_neighbors()
 The driver supports two diff modes when merging configuration:
 
 * **non-contextual diff** (default behavior)
-* **contextual diff** (as proposed in PR #23)
+* **contextual diff** (as proposed in PR [#23](https://github.com/napalm-automation-community/napalm-huawei-vrp/pull/23))
 
 The second mode can be set during driver instantiation:
 
