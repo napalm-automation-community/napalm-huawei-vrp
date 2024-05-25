@@ -11,7 +11,7 @@ __author__ = "Locus Li <locus@byto.top>"
 
 setup(
     name="napalm-huawei-vrp",
-    version="v1.1.0",
+    version="v1.2.0",
     packages=find_packages(exclude=("test*",)),
     test_suite="test_base",
     author="Locus Li, Michael Alvarez",
