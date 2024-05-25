@@ -226,21 +226,29 @@ class VRPDriver(NetworkDriver):
         # os_version/uptime/model
         for line in show_ver.splitlines():
             if "VRP (R) software" in line:
-                search_result = re.search(r"\(S\S+\s+(?P<os_version>V\S+)\)", line)
-                if search_result is not None:
-                    os_version = search_result.group("os_version")
-
-            if "HUAWEI" in line and "uptime is" in line:
-                search_result = re.search(r"S\S+", line)
-                if search_result is not None:
-                    model = search_result.group(0)
-                uptime = self._parse_uptime(line)
-                break
+                line_process = re.split(" ", line)
+                os_version = line_process[len(line_process) - 1]
+                os_version = os_version[:-1]
+            if "HUAWEI " in line:
+                if "uptime is" in line:
+                    line_process = re.split("uptime is", line)
+                    model = re.split("HUAWEI", line_process[0])[1].lstrip().rstrip()
+                    uptime = self._parse_uptime(line_process[1])
+            if "Routing Switch" in model:
+                model = re.split(" ", model)[0]
+            elif "Huawei " in line:
+                if "uptime is" in line:
+                    line_process = re.split("uptime is", line)
+                    model = re.split("Huawei", line_process[0])[1].lstrip().rstrip()
+                    uptime = self._parse_uptime(line_process[1])
+                if "Router" in model:
+                    model = re.split(" ", model)[0]
 
         # get serial_number,due to the stack have multiple SN, so show it in a list
         # 由于堆叠设备会有多少个SN，所以这里用列表展示
-        re_sn = r"ESN\s+of\s+slot\s+\S+\s+(?P<serial_number>\S+)"
-        serial_number = re.findall(re_sn, show_esn, flags=re.M)
+        serial_number = []
+        for line in show_esn.splitlines():
+            serial_number.append(re.split(":", line)[1].lstrip().rstrip())
 
         if "sysname " in show_hostname:
             _, hostname = show_hostname.split("sysname ")
@@ -610,6 +618,8 @@ class VRPDriver(NetworkDriver):
         re_mac = r"Hardware address is\W+(?P<mac_address>\S+)"
         re_speed = r"^Speed\W+(?P<speed>\d+|\w+)"
         re_description = r"Description:(?:(?:)|(?P<description>.*))\n"
+        re_speed_eth_ce = r"Current BW : +(?P<speed>\d+)"
+        re_speed_eth_ar = r"Current BW: +(?P<speed>\d+)"
         re_mtu = r"Maximum Transmit Unit(?:(?:\(L3\))|(?:)) is (?P<int_mtu>\d+)"
 
         new_interfaces = self._separate_section(separator, output)
@@ -622,6 +632,8 @@ class VRPDriver(NetworkDriver):
                 msg = "Unexpected interface format: {}".format(interface)
                 raise ValueError(msg)
             intf_name = match_intf.group("intf_name")
+            if intf_name == "Dialer1:0":
+                continue
             intf_state = match_intf.group("intf_state")
             is_enabled = bool("up" in intf_state.lower())
 
@@ -647,6 +659,16 @@ class VRPDriver(NetworkDriver):
                 speed = match_speed.group("speed")
                 if speed.isdigit():
                     speed = float(speed)
+
+            match_speed_eth_ar = re.findall(re_speed_eth_ar, interface, flags=re.M)
+            if match_speed_eth_ar:
+                if match_speed_eth_ar[0].isdigit():
+                    speed = float(match_speed_eth_ar[0]) * 1000
+
+            match_speed_eth_ce = re.findall(re_speed_eth_ce, interface, flags=re.M)
+            if match_speed_eth_ce:
+                if match_speed_eth_ce[0].isdigit():
+                    speed = float(match_speed_eth_ce[0]) * 1000
 
             # description matching
             description = ""
@@ -725,6 +747,13 @@ class VRPDriver(NetworkDriver):
             intf_name = match_intf.group("intf_name")
             # v4_interfaces[intf_name] = {}
             match_ip = re.findall(re_intf_ip, interface, flags=re.M)
+
+            if not match_ip:
+                re_intf_ip = r"Internet Address is negotiated,\s+(?P<ip_address>\d+.\d+.\d+.\d+)\/(?P<prefix_length>\d+)"
+                match_ip = re.findall(re_intf_ip, interface, flags=re.M)
+                if not match_ip:
+                    re_intf_ip = r"Internet Address is allocated by DHCP,\s+(?P<ip_address>\d+.\d+.\d+.\d+)\/(?P<prefix_length>\d+)"
+                    match_ip = re.findall(re_intf_ip, interface, flags=re.M)
 
             for ip_info in match_ip:
                 val = {"prefix_length": int(ip_info[1])}
