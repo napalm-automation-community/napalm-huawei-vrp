@@ -311,7 +311,7 @@ class VRPDriver(NetworkDriver):
         # 定义执行命令
         fan_cmd = "display fan"
         """
-         Slot  FanID   Online    Status    Speed     Mode     Airflow            
+         Slot  FanID   Online    Status    Speed     Mode     Airflow
         -------------------------------------------------------------------------
          0     1       Present   Normal    55%       Auto     Side-to-Back
          1     1       Present   Normal    55%       Auto     Side-to-Back
@@ -321,10 +321,10 @@ class VRPDriver(NetworkDriver):
         ------------------------------------------------------------
          Slot    PowerID  Online   Mode   State      Power(W)
         ------------------------------------------------------------
-         0       PWR1     Present  AC     Supply     600.00     
-         0       PWR2     Present  AC     Supply     600.00     
-         1       PWR1     Present  AC     Supply     600.00     
-         1       PWR2     Present  AC     Supply     600.00  
+         0       PWR1     Present  AC     Supply     600.00
+         0       PWR2     Present  AC     Supply     600.00
+         1       PWR1     Present  AC     Supply     600.00
+         1       PWR2     Present  AC     Supply     600.00
         """
         temp_cmd = "display temperature all"
         """
@@ -339,7 +339,7 @@ class VRPDriver(NetworkDriver):
         """
         CPU Usage Stat. Cycle: 60 (Second)
         CPU Usage            : 28% Max: 87%
-        CPU Usage Stat. Time : 2022-01-13  18:57:06 
+        CPU Usage Stat. Time : 2022-01-13  18:57:06
         CPU utilization for five seconds: 28%: one minute: 28%: five minutes: 20%
         Max CPU Usage Stat. Time : 2021-10-05 17:50:44.
         """
@@ -618,15 +618,17 @@ class VRPDriver(NetworkDriver):
             match_intf = re.search(re_intf_name_state, interface, flags=re.M)
             match_proto = re.search(re_protocol, interface, flags=re.M)
 
-            if match_intf is None or match_proto is None:
+            if match_intf is None:
                 msg = "Unexpected interface format: {}".format(interface)
                 raise ValueError(msg)
             intf_name = match_intf.group("intf_name")
             intf_state = match_intf.group("intf_state")
             is_enabled = bool("up" in intf_state.lower())
 
-            protocol = match_proto.group("protocol")
-            is_up = bool("up" in protocol.lower())
+            is_up = False
+            if match_proto:
+                protocol = match_proto.group("protocol")
+                is_up = bool("up" in protocol.lower())
 
             match_mac = re.search(re_mac, interface, flags=re.M)
             if match_mac:
