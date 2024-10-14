@@ -903,7 +903,7 @@ class VRPDriver(NetworkDriver):
             ]
         """
         arp_table = []
-        output = self.device.send_command("display arp all")
+        output = self.device.send_command("display arp")
         re_arp = (
             r"(?P<ip_address>\d+\.\d+\.\d+\.\d+)\s+(?P<mac>\S+)\s+(?P<exp>\d+|)\s+"
             r"(?P<type>I|D|S|O)\S+\s+(?P<interface>\S+)"
@@ -969,18 +969,22 @@ class VRPDriver(NetworkDriver):
         command = "display mac-address"
         output = self.device.send_command(command)
         re_mac = (
-            r"(?P<mac>\S+)\s+(?P<vlan>\d+|-)\S+\s+(?P<interface>\S+)\s+(?P<type>\w+)\s+"
+            r"(?P<mac>\S+)\s+(?P<vlan_vsi_bd>\S+)\s+(?P<interface>\S+)\s+(?P<type>\w+)\s+(?P<age>\d+)"
         )
         match = re.findall(re_mac, output, re.M)
 
         for mac_info in match:
+            vlan_vsi_bd = mac_info[1].split('/')
             mac_dict = {
                 "mac": mac(mac_info[0]),
                 "interface": mac_info[2],
-                "vlan": int(mac_info[1]),
+                "vlan": int(vlan_vsi_bd[0]) if vlan_vsi_bd[0] != '-' else 0,
+                "vsi": int(vlan_vsi_bd[1]) if vlan_vsi_bd[1] != '-' else 0,
+                "bd": int(vlan_vsi_bd[2]) if vlan_vsi_bd[2] != '-' else 0,
                 "static": True if mac_info[3] == "static" else False,
                 "active": True if mac_info[3] == "dynamic" else False,
                 "authen": True if mac_info[3] == "authen" else False,
+                "age": int(mac_info[4]) if mac_info[4] != '-' else 0,
                 "moves": -1,
                 "last_move": -1.0,
             }
