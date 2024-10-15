@@ -1,0 +1,6 @@
+vlan 32
+ name CLIENT_1
+vlan 45
+ description ACCESS_TO_BORDER_ROUTER
+
+ 
