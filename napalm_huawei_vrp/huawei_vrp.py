@@ -864,16 +864,84 @@ class VRPDriver(NetworkDriver):
 
     # develop
     def get_lldp_neighbors_detail(self, interface=""):
-        pass
         """
         Return a detailed view of the LLDP neighbors as a dictionary.
 
         Sample output:
         {
+            '100GE1/0/1': [
+                {
+                    'parent_interface': '100GE1/0/1',
+                    'remote_chassis_id': '0000-0000-0000',
+                    'remote_system_name': 'NEAROUTE-CR01-EQHK2.nearoute.io',
+                    'remote_port': '575',
+                    'remote_port_description': 'DOWNSTREAM: NEAROUTE SW01 et-0/0/0',
+                    'remote_system_description': 'NEAROUTE-CR01-EQHK2.nearoute.io',
+                    'remote_system_capab': ['bridge', 'router'],
+                    'remote_system_enable_capab': ['bridge', 'router']
+                }
+            ]
         }
         """
-        lldp_neighbors = {}
-        return lldp_neighbors
+        lldp_neighbors_detail = {}
+        
+        command = "display lldp neighbor"
+        if interface:
+            command += f" interface {interface}"
+        
+        output = self.device.send_command(command)
+        
+        # Split output into sections for each interface
+        interface_sections = re.split(r"(\S+) has \d+ neighbor\(s\):", output)[1:]
+        
+        for i in range(0, len(interface_sections), 2):
+            intf = interface_sections[i].strip()
+            intf_info = interface_sections[i+1].strip()
+            
+            lldp_neighbors_detail[intf] = []
+            
+            # Extract neighbor details
+            neighbor_info = {
+                'parent_interface': 'N/A',
+                'remote_chassis_id': 'N/A',
+                'remote_system_name': 'N/A',
+                'remote_port': 'N/A',
+                'remote_port_description': 'N/A',
+                'remote_system_description': 'N/A',
+                'remote_system_capab': [],
+                'remote_system_enable_capab': []
+            }
+            
+            for line in intf_info.split('\n'):
+                if ':' not in line:
+                    continue
+                key, value = line.split(':', 1)
+                key = key.strip().lower()
+                value = value.strip()
+                
+                if 'chassis id' in key:
+                    neighbor_info['remote_chassis_id'] = value
+                elif 'system name' in key:
+                    neighbor_info['remote_system_name'] = value
+                elif 'port description' in key:
+                    neighbor_info['remote_port_description'] = value
+                elif 'system description' in key:
+                    neighbor_info['remote_system_description'] = value
+                elif 'system capabilities supported' in key:
+                    neighbor_info['remote_system_capab'] = value.lower().split()
+                elif 'system capabilities enabled' in key:
+                    neighbor_info['remote_system_enable_capab'] = value.lower().split()
+                elif 'aggregation port id' in key:
+                    neighbor_info['parent_interface'] = value
+
+            port_id_match = re.search(r"Port ID\s+:(.+)", intf_info)
+            if port_id_match:
+                neighbor_info['remote_port'] = port_id_match.group(1)
+ 
+            
+            lldp_neighbors_detail[intf].append(neighbor_info)
+        
+        return lldp_neighbors_detail
 
     # verified
     def get_arp_table(self, vrf=""):
@@ -903,7 +971,7 @@ class VRPDriver(NetworkDriver):
             ]
         """
         arp_table = []
-        output = self.device.send_command("display arp all")
+        output = self.device.send_command("display arp")
         re_arp = (
             r"(?P<ip_address>\d+\.\d+\.\d+\.\d+)\s+(?P<mac>\S+)\s+(?P<exp>\d+|)\s+"
             r"(?P<type>I|D|S|O)\S+\s+(?P<interface>\S+)"
@@ -969,18 +1037,22 @@ class VRPDriver(NetworkDriver):
         command = "display mac-address"
         output = self.device.send_command(command)
         re_mac = (
-            r"(?P<mac>\S+)\s+(?P<vlan>\d+|-)\S+\s+(?P<interface>\S+)\s+(?P<type>\w+)\s+"
+            r"(?P<mac>\S+)\s+(?P<vlan_vsi_bd>\S+)\s+(?P<interface>\S+)\s+(?P<type>\w+)\s+(?P<age>\d+)"
         )
         match = re.findall(re_mac, output, re.M)
 
         for mac_info in match:
+            vlan_vsi_bd = mac_info[1].split('/')
             mac_dict = {
                 "mac": mac(mac_info[0]),
                 "interface": mac_info[2],
-                "vlan": int(mac_info[1]),
+                "vlan": int(vlan_vsi_bd[0]) if vlan_vsi_bd[0] != '-' else 0,
+                "vsi": int(vlan_vsi_bd[1]) if vlan_vsi_bd[1] != '-' else 0,
+                "bd": int(vlan_vsi_bd[2]) if vlan_vsi_bd[2] != '-' else 0,
                 "static": True if mac_info[3] == "static" else False,
                 "active": True if mac_info[3] == "dynamic" else False,
                 "authen": True if mac_info[3] == "authen" else False,
+                "age": int(mac_info[4]) if mac_info[4] != '-' else 0,
                 "moves": -1,
                 "last_move": -1.0,
             }
