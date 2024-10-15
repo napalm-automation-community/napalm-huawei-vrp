@@ -864,16 +864,84 @@ class VRPDriver(NetworkDriver):
 
     # develop
     def get_lldp_neighbors_detail(self, interface=""):
-        pass
         """
         Return a detailed view of the LLDP neighbors as a dictionary.
 
         Sample output:
         {
+            '100GE1/0/1': [
+                {
+                    'parent_interface': '100GE1/0/1',
+                    'remote_chassis_id': '0000-0000-0000',
+                    'remote_system_name': 'NEAROUTE-CR01-EQHK2.nearoute.io',
+                    'remote_port': '575',
+                    'remote_port_description': 'DOWNSTREAM: NEAROUTE SW01 et-0/0/0',
+                    'remote_system_description': 'NEAROUTE-CR01-EQHK2.nearoute.io',
+                    'remote_system_capab': ['bridge', 'router'],
+                    'remote_system_enable_capab': ['bridge', 'router']
+                }
+            ]
         }
         """
-        lldp_neighbors = {}
-        return lldp_neighbors
+        lldp_neighbors_detail = {}
+        
+        command = "display lldp neighbor"
+        if interface:
+            command += f" interface {interface}"
+        
+        output = self.device.send_command(command)
+        
+        # Split output into sections for each interface
+        interface_sections = re.split(r"(\S+) has \d+ neighbor\(s\):", output)[1:]
+        
+        for i in range(0, len(interface_sections), 2):
+            intf = interface_sections[i].strip()
+            intf_info = interface_sections[i+1].strip()
+            
+            lldp_neighbors_detail[intf] = []
+            
+            # Extract neighbor details
+            neighbor_info = {
+                'parent_interface': 'N/A',
+                'remote_chassis_id': 'N/A',
+                'remote_system_name': 'N/A',
+                'remote_port': 'N/A',
+                'remote_port_description': 'N/A',
+                'remote_system_description': 'N/A',
+                'remote_system_capab': [],
+                'remote_system_enable_capab': []
+            }
+            
+            for line in intf_info.split('\n'):
+                if ':' not in line:
+                    continue
+                key, value = line.split(':', 1)
+                key = key.strip().lower()
+                value = value.strip()
+                
+                if 'chassis id' in key:
+                    neighbor_info['remote_chassis_id'] = value
+                elif 'system name' in key:
+                    neighbor_info['remote_system_name'] = value
+                elif 'port description' in key:
+                    neighbor_info['remote_port_description'] = value
+                elif 'system description' in key:
+                    neighbor_info['remote_system_description'] = value
+                elif 'system capabilities supported' in key:
+                    neighbor_info['remote_system_capab'] = value.lower().split()
+                elif 'system capabilities enabled' in key:
+                    neighbor_info['remote_system_enable_capab'] = value.lower().split()
+                elif 'aggregation port id' in key:
+                    neighbor_info['parent_interface'] = value
+
+            port_id_match = re.search(r"Port ID\s+:(.+)", intf_info)
+            if port_id_match:
+                neighbor_info['remote_port'] = port_id_match.group(1)
+ 
+            
+            lldp_neighbors_detail[intf].append(neighbor_info)
+        
+        return lldp_neighbors_detail
 
     # verified
     def get_arp_table(self, vrf=""):
