@@ -20,9 +20,18 @@ Maintainers: Locus Li (locus@byto.top), Michael Alvarez(codingnetworks@gmail.com
 Read https://napalm.readthedocs.io for more information.
 """
 
+import sys
+if sys.version_info >= (3, 13):
+    # telnetlib removed in Python 3.13, use telnetlib3 instead
+    import telnetlib3 as telnetlib
+    IAC = telnetlib.IAC
+    NOP = telnetlib.NOP
+else:
+    import telnetlib
+    IAC = telnetlib.IAC
+    NOP = telnetlib.NOP
 import socket
 import re
-import telnetlib
 import os
 import tempfile
 import uuid
@@ -171,7 +180,7 @@ class VRPDriver(NetworkDriver):
             if self.transport == "telnet":
                 # Try sending IAC + NOP (IAC is telnet way of sending command
                 # IAC = Interpret as Command (it comes before the NOP)
-                self.device.write_channel(telnetlib.IAC + telnetlib.NOP)
+                self.device.write_channel(bytes([IAC, NOP]))
                 return {"is_alive": True}
             else:
                 # SSH
@@ -394,7 +403,11 @@ class VRPDriver(NetworkDriver):
             r"CPU utilization for five seconds: \d+%: one minute: \d+%: five minutes: (\d+)%",
             cpu_cmd,
         )
-        environment["cpu"] = {"0": {"usage": cpu_use.group(1)}}
+        if cpu_use:
+            environment["cpu"] = {"0": {"%usage": cpu_use.group(1)}}
+        else:
+            environment["cpu"] = {"0": {"%usage": -1}}
+
         # 内存使用情况
         environment.setdefault("memory", {})
         memory_use = re.findall(r"(\d+) bytes", mem_cmd)
