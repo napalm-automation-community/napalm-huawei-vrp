@@ -1,3 +1,5 @@
 include requirements.txt
 include napalm_huawei_vrp/templates/*.j2
 include napalm_huawei_vrp/utils/textfsm_templates/*.tpl
+include napalm_huawei_vrp/card_mapping.json
+include README.md

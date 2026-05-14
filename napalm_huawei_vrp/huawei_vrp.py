@@ -13,6 +13,9 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
+__version__ = "1.4.0"
+__date__ = "2026-03-24"
+
 """
 NAPALM Driver for Huawei VRP5/VRP8 Routers and Switches.
 Author: Locus Li (locus@byto.top)
@@ -20,9 +23,18 @@ Maintainers: Locus Li (locus@byto.top), Michael Alvarez(codingnetworks@gmail.com
 Read https://napalm.readthedocs.io for more information.
 """
 
+import sys
+if sys.version_info >= (3, 13):
+    # telnetlib removed in Python 3.13, use telnetlib3 instead
+    import telnetlib3 as telnetlib
+    IAC = telnetlib.IAC
+    NOP = telnetlib.NOP
+else:
+    import telnetlib
+    IAC = telnetlib.IAC
+    NOP = telnetlib.NOP
 import socket
 import re
-import telnetlib
 import os
 import tempfile
 import uuid
@@ -30,6 +42,7 @@ import hashlib
 from napalm.base.helpers import mac
 import napalm.base.constants as C
 
+from netmiko.exceptions import ReadTimeout
 from datetime import datetime
 from diffplus import IndentedConfig, IncrementalDiff
 from napalm.base import NetworkDriver
@@ -40,7 +53,7 @@ from napalm.base.exceptions import (
     CommandErrorException,
     CommitError,
 )
-from .utils.utils import pretty_mac, SafeList
+from .utils.utils import pretty_mac, SafeList, expand_interface
 
 # Easier to store these as constants
 HOUR_SECONDS = 3600
@@ -171,7 +184,7 @@ class VRPDriver(NetworkDriver):
             if self.transport == "telnet":
                 # Try sending IAC + NOP (IAC is telnet way of sending command
                 # IAC = Interpret as Command (it comes before the NOP)
-                self.device.write_channel(telnetlib.IAC + telnetlib.NOP)
+                self.device.write_channel(bytes([IAC, NOP]))
                 return {"is_alive": True}
             else:
                 # SSH
@@ -273,136 +286,103 @@ class VRPDriver(NetworkDriver):
     def get_environment(self):
         """
         Return environment details.
-
-        Sample output:
-        {
-            "cpu": {
-                "0": {
-                    "%usage": 18.0
-                }
-            },
-            "fans": {
-                "FAN1": {
-                    "status": true
-                }
-            },
-            "memory": {
-                "available_ram": 3884224,
-                "used_ram": 784552
-            },
-            "power": {
-                "PWR1": {
-                    "capacity": 600.0,
-                    "output": 92.0,
-                    "status": true
-                }
-            },
-            "temperature": {
-                "CPU": {
-                    "is_alert": false,
-                    "is_critical": false,
-                    "temperature": 45.0
-                }
-            }
-        }
         """
-        # 空包
         environment = {}
-        # 定义执行命令
+
+        # 1. Fans
         fan_cmd = "display fan"
-        """
-         Slot  FanID   Online    Status    Speed     Mode     Airflow            
-        -------------------------------------------------------------------------
-         0     1       Present   Normal    55%       Auto     Side-to-Back
-         1     1       Present   Normal    55%       Auto     Side-to-Back
-        """
-        power_cmd = "display power"
-        """
-        ------------------------------------------------------------
-         Slot    PowerID  Online   Mode   State      Power(W)
-        ------------------------------------------------------------
-         0       PWR1     Present  AC     Supply     600.00     
-         0       PWR2     Present  AC     Supply     600.00     
-         1       PWR1     Present  AC     Supply     600.00     
-         1       PWR2     Present  AC     Supply     600.00  
-        """
-        temp_cmd = "display temperature all"
-        """
-        -------------------------------------------------------------------------------
-         Slot  Card  Sensor Status    Current(C) Lower(C) Lower     Upper(C) Upper
-                                                          Resume(C)          Resume(C)
-        -------------------------------------------------------------------------------
-         0     NA    NA     Normal     37        0        4         63       59
-         1     NA    NA     Normal     39        0        4         63       59
-         """
-        cpu_cmd = "display cpu-usage"
-        """
-        CPU Usage Stat. Cycle: 60 (Second)
-        CPU Usage            : 28% Max: 87%
-        CPU Usage Stat. Time : 2022-01-13  18:57:06 
-        CPU utilization for five seconds: 28%: one minute: 28%: five minutes: 20%
-        Max CPU Usage Stat. Time : 2021-10-05 17:50:44.
-        """
-        mem_cmd = "display memory-usage"
-        """
-         Memory utilization statistics at 2022-01-13 18:57:37+08:00
-         System Total Memory Is: 1598029824 bytes
-         Total Memory Used Is: 188593436 bytes
-         Memory Using Percentage Is: 11%
-        """
-        # 发送命令
         fan_output = self.device.send_command(fan_cmd)
-        power_cmd = self.device.send_command(power_cmd)
-        temp_cmd = self.device.send_command(temp_cmd)
-        cpu_cmd = self.device.send_command(cpu_cmd)
-        mem_cmd = self.device.send_command(mem_cmd)
-        # 设备风扇情况
         environment.setdefault("fans", {})
-        for i in fan_output.split("\n"):
-            match = re.match(r"\s+(\d+).+(Normal|Abnormal).+", i)
+        for line in fan_output.split("\n"):
+            # Example: " 0     1       Present   Normal    55%       Auto     Side-to-Back"
+            match = re.match(r"\s+(\d+)\s+(\d+)\s+\S+\s+(Normal|Abnormal)", line)
             if match:
                 slot = match.group(1)
-                status = True if match.group(2) == "Normal" else False
-                environment["fans"][slot] = {"status": status}
+                fanid = match.group(2)
+                status = True if match.group(3) == "Normal" else False
+                key = f"Fan-{slot}-{fanid}"
+                environment["fans"][key] = {"status": status}
 
-        # 设备电源情况
+        # 2. Power supplies
+        power_cmd = "display power"
+        power_output = self.device.send_command(power_cmd)
         environment.setdefault("power", {})
-        for i in power_cmd.split("\n"):
-            # match = re.match(r"\s+(\d+).+(Normal|Abnormal).+", i)
-            match = re.match(r"\s+(\d+)\s+(\w+\d+)\s+(\w+).+\s+(\w+)\s+(\d+\.\d+)", i)
+        for line in power_output.split("\n"):
+            # Example: " 0       PWR1     Present  AC     Supply     600.00"
+            match = re.match(r"\s+(\d+)\s+(\w+\d+)\s+\S+\s+\S+\s+(\w+)\s+(\d+\.\d+)", line)
             if match:
-                environment["power"][f"{match.group(2)}-{match.group(1)}"] = {
-                    "capacity": float(match.group(5)),
+                slot = match.group(1)
+                ps_id = match.group(2)
+                status = True if match.group(3) == "Supply" else False
+                capacity = float(match.group(4))
+                key = f"{ps_id}-{slot}"
+                environment["power"][key] = {
+                    "capacity": capacity,
                     "output": None,
-                    "status": True if match.group(4) == "Supply" else False,
+                    "status": status
                 }
-        # 设备温度情况
-        environment.setdefault("temperature", {})
-        for i in temp_cmd.split("\n"):
-            match = re.split("\s+", i)
-            if len(match) == 10:
-                if "Upper" not in match:
-                    environment["temperature"]["slot" + match[1]] = {
-                        "is_alert": False if match[4] == "Normal" else True,
-                        "is_critical": False if match[4] == "Normal" else True,
-                        "temperature": float(match[-1]),
-                    }
 
-        # CPU使用率
+        #3. Temperature (with thresholds)
+        temp_cmd = "display temperature all"
+        temp_output = self.device.send_command(temp_cmd)
+        environment.setdefault("temperature", {})
+
+        # Regex to parse temperature lines
+        # Expected format:
+        # Slot Card Sensor Status    Current(C) Lower(C) Lower     Upper(C) Upper
+        #                                               Resume(C)          Resume(C)
+        # 0     NA    NA     Normal            53       -3         1       68        64
+        re_temp = re.compile(
+            r"^\s*(?P<slot>\d+)\s+NA\s+NA\s+(?P<status>\S+)\s+(?P<current>-?\d+)\s+(?P<lower>-?\d+)\s+\d+\s+(?P<upper>\d+)\s+\d+",
+            re.MULTILINE
+        )
+        
+        for match in re_temp.finditer(temp_output):
+            slot = match.group("slot")
+            current = float(match.group("current"))
+            upper = float(match.group("upper"))
+            lower = float(match.group("lower"))
+        
+            is_alert = current > upper or current < lower
+            is_critical = False  # No critical threshold available
+
+            environment["temperature"][f"slot{slot}"] = {
+                "is_alert": is_alert,
+                "is_critical": is_critical,
+                "temperature": current,
+            }
+        # 4. CPU usage
+        cpu_cmd = "display cpu-usage"
+        cpu_output = self.device.send_command(cpu_cmd)
         environment.setdefault("cpu", {})
         cpu_use = re.search(
             r"CPU utilization for five seconds: \d+%: one minute: \d+%: five minutes: (\d+)%",
-            cpu_cmd,
+            cpu_output,
         )
-        environment["cpu"] = {"0": {"usage": cpu_use.group(1)}}
-        # 内存使用情况
-        environment.setdefault("memory", {})
-        memory_use = re.findall(r"(\d+) bytes", mem_cmd)
-        environment["memory"] = {
-            "available_ram": int(memory_use[0]) - int(memory_use[1]),
-            "used_ram": int(memory_use[1]),
-        }
+        if cpu_use:
+            environment["cpu"] = {"0": {"%usage": cpu_use.group(1)}}
+        else:
+            environment["cpu"] = {"0": {"%usage": -1}}
+    
+        # 5. Memory usage
+        mem_cmd = "display memory-usage"
+        mem_output = self.device.send_command(mem_cmd)
+        memory_use = re.findall(r"(\d+) bytes", mem_output)
+        if len(memory_use) >= 2:
+            total = int(memory_use[0])
+            used = int(memory_use[1])
+            environment["memory"] = {
+                "available_ram": total - used,
+                "used_ram": used,
+            }
+        else:
+            environment["memory"] = {
+                "available_ram": -1,
+                "used_ram": -1,
+            }
+    
         return environment
+
 
     # verified
     def get_config(self, retrieve="all", full=False):
@@ -425,21 +405,122 @@ class VRPDriver(NetworkDriver):
         return config
 
     # ok
-    def load_merge_candidate(self, filename=None, config=None):
-        """Open the candidate config and merge."""
-        if not filename and not config:
-            raise MergeConfigException("filename or config param must be provided.")
 
-        self.merge_candidate += "\n"  # insert one extra line
-        if filename is not None:
-            with open(filename, "r") as f:
-                self.merge_candidate += f.read()
-        else:
-            self.merge_candidate += config
-
-        self.replace = False
-        self.loaded = True
-
+    def get_network_instances(self, name=""):
+        """
+        Return network instances (VRFs) information.
+        """
+        network_instances = {}
+    
+        # Get VPN instances and their route distinguishers
+        cmd_vpn = "display ip vpn-instance"
+        output_vpn = self.device.send_command(cmd_vpn)
+    
+        # Regex to parse: "MGMT   65400:654000   IPv4" and "MGMT   IPv6"
+        re_vpn = re.compile(
+            r"^\s*(?P<name>\S+)\s+(?P<rd>\S*)\s+(?P<afi>IPv4|IPv6)",
+            re.MULTILINE
+        )
+    
+        vrf_data = {}
+        for match in re_vpn.finditer(output_vpn):
+            vrf_name = match.group("name")
+            rd = match.group("rd") if match.group("rd") else ""
+            afi = match.group("afi").lower()
+    
+            if vrf_name not in vrf_data:
+                vrf_data[vrf_name] = {"rd": "", "address_families": {}, "interfaces": []}
+            if rd:
+                vrf_data[vrf_name]["rd"] = rd
+            vrf_data[vrf_name]["address_families"][afi] = {"route_distinguisher": rd}
+    
+        # Get interfaces bound to each VPN instance (line-by-line parsing)
+        cmd_if = "display ip vpn-instance interface"
+        output_if = self.device.send_command(cmd_if)
+    
+        lines = output_if.splitlines()
+        i = 0
+        while i < len(lines):
+            line = lines[i].strip()
+            if line.startswith("VPN-Instance Name and ID"):
+                # Extract VRF name
+                parts = line.split(",")
+                if len(parts) >= 1:
+                    vrf_name = parts[0].split(":")[1].strip()
+                else:
+                    vrf_name = ""
+                i += 1
+                # Skip empty lines
+                while i < len(lines) and lines[i].strip() == "":
+                    i += 1
+                # Look for "Interface Number" line
+                if i < len(lines) and "Interface Number" in lines[i]:
+                    i += 1
+                    while i < len(lines) and lines[i].strip() == "":
+                        i += 1
+                    # Look for "Interface list" line
+                    interfaces = []
+                    if i < len(lines) and "Interface list" in lines[i]:
+                        intf_str = lines[i].split(":")[1].strip()
+                        if intf_str:
+                            interfaces = [intf.strip() for intf in intf_str.split(",")]
+                        i += 1
+                    # Store
+                    if vrf_name in vrf_data:
+                        vrf_data[vrf_name]["interfaces"] = interfaces
+                    else:
+                        vrf_data[vrf_name] = {
+                            "rd": "",
+                            "interfaces": interfaces,
+                            "address_families": {}
+                        }
+                else:
+                    # No interface info for this VRF
+                    if vrf_name not in vrf_data:
+                        vrf_data[vrf_name] = {
+                            "rd": "",
+                            "interfaces": [],
+                            "address_families": {}
+                        }
+            else:
+                i += 1
+    
+        # Build final output in NAPALM format
+        for vrf_name, data in vrf_data.items():
+            network_instances[vrf_name] = {
+                "name": vrf_name,
+                "type": "L3VRF",
+                "state": {
+                    "route_distinguisher": data.get("rd", "")
+                },
+                "interfaces": {
+                    "interface": {
+                        intf: {}
+                        for intf in data.get("interfaces", [])
+                    }
+                },
+                "address_families": data.get("address_families", {})
+            }
+    
+        # Add default instance (global routing table) if not present
+        if "default" not in network_instances:
+            network_instances["default"] = {
+                "name": "default",
+                "type": "DEFAULT_INSTANCE",
+                "state": {
+                    "route_distinguisher": None
+                },
+                "interfaces": {
+                    "interface": {}
+                },
+                "address_families": {}
+            }
+    
+        # If a specific instance name is requested, return only that
+        if name:
+            return {name: network_instances.get(name, {})}
+        return network_instances
+    
     # developing
     def load_replace_candidate(self, filename=None, config=None):
         """Open the candidate config and replace."""
@@ -610,8 +691,8 @@ class VRPDriver(NetworkDriver):
         re_mac = r"Hardware address is\W+(?P<mac_address>\S+)"
         re_speed = r"^Speed\W+(?P<speed>\d+|\w+)"
         re_description = r"Description:(?:(?:)|(?P<description>.*))\n"
-        re_mtu = r"Maximum Transmit Unit(?:(?:\(L3\))|(?:)) is (?P<int_mtu>\d+)"
-
+#        re_mtu = r"Maximum Transmit Unit(?:(?:\(L3\))|(?:)) is (?P<int_mtu>\d+)"
+        re_mtu = r"(?:Maximum Transmit Unit(?:\(L3\))? is|Route Port,The MTU is)\s+(?P<int_mtu>\d+)"
         new_interfaces = self._separate_section(separator, output)
         for interface in new_interfaces:
             interface = interface.strip()
@@ -862,70 +943,172 @@ class VRPDriver(NetworkDriver):
             results[local_intf].append(neighbor_dict)
         return results
 
-    # develop
     def get_lldp_neighbors_detail(self, interface=""):
-        pass
         """
-        Return a detailed view of the LLDP neighbors as a dictionary.
-
-        Sample output:
-        {
-        }
+        Return a detailed view of the LLDP neighbors as a dictionary
+        containing lists of dictionaries for each interface.
+    
+        :param interface: optional interface name to filter results
+        :return: dict with interface as key and list of neighbor dicts as value
         """
-        lldp_neighbors = {}
-        return lldp_neighbors
+        command = "display lldp neighbor"
+        output = self.device.send_command(command)
+    
+        # Split output into per-interface sections
+        re_intf_header = re.compile(r"^(?P<intf>\S+) has \d+ neighbor\(s\):$", re.MULTILINE)
+        sections = []
+        last_pos = 0
+        prev_intf = None
+        for match in re_intf_header.finditer(output):
+            start = match.start()
+            if last_pos > 0:
+                sections.append((prev_intf, output[last_pos:start]))
+            prev_intf = match.group("intf")
+            last_pos = start
+        if last_pos > 0:
+            sections.append((prev_intf, output[last_pos:]))
+    
+        result = {}
+    
+        for intf_name, intf_block in sections:
+            if interface and intf_name != interface:
+                continue
+    
+            # Split into neighbor blocks (each starts with "Neighbor index :")
+            neighbor_blocks = re.split(r"\nNeighbor index :\d+\n", intf_block)
+            neighbors = []
+            for block in neighbor_blocks:
+                # Skip empty blocks or blocks that don't contain real neighbor data
+                if not block.strip():
+                    continue
+                # Quick check: must have at least one key field
+                if not re.search(r"Chassis ID|Port ID|System name", block):
+                    continue
+    
+                neighbor = {
+                    "parent_interface": "",
+                    "remote_port": "",
+                    "remote_port_description": "",
+                    "remote_chassis_id": "",
+                    "remote_system_name": "",
+                    "remote_system_description": "",
+                    "remote_system_capab": [],
+                    "remote_system_enabled_capab": [],
+                }
+    
+                # Chassis ID
+                match = re.search(r"Chassis ID\s*:\s*(?P<chassis>.+)", block)
+                if match:
+                    neighbor["remote_chassis_id"] = match.group("chassis").strip()
+    
+                # Port ID
+                match = re.search(r"Port ID\s*:\s*(?P<port>.+)", block)
+                if match:
+                    neighbor["remote_port"] = match.group("port").strip()
+    
+                # Port description
+                match = re.search(r"Port description\s*:\s*(?P<desc>.+)", block)
+                if match:
+                    neighbor["remote_port_description"] = match.group("desc").strip()
+    
+                # System name
+                match = re.search(r"System name\s*:\s*(?P<name>.+)", block)
+                if match:
+                    neighbor["remote_system_name"] = match.group("name").strip()
+    
+                # System description (multi-line)
+                desc_lines = []
+                in_desc = False
+                for line in block.splitlines():
+                    if "System description" in line:
+                        in_desc = True
+                        if ":" in line:
+                            desc_part = line.split(":", 1)[1].strip()
+                            if desc_part:
+                                desc_lines.append(desc_part)
+                    elif in_desc:
+                        # Stop when we hit a new field with colon
+                        if re.match(r"^[A-Za-z ]+\s*:", line):
+                            in_desc = False
+                        else:
+                            desc_lines.append(line.strip())
+                if desc_lines:
+                    neighbor["remote_system_description"] = "\n".join(desc_lines)
+    
+                # Capabilities supported
+                match = re.search(r"System capabilities supported\s*:\s*(?P<capab>.+)", block)
+                if match:
+                    capab_str = match.group(1).strip()
+                    neighbor["remote_system_capab"] = capab_str.split()
+    
+                # Capabilities enabled
+                match = re.search(r"System capabilities enabled\s*:\s*(?P<enabled>.+)", block)
+                if match:
+                    enabled_str = match.group(1).strip()
+                    neighbor["remote_system_enabled_capab"] = enabled_str.split()
+    
+                neighbors.append(neighbor)
+    
+            if neighbors:
+                result[intf_name] = neighbors
+    
+        return result
 
+    
     # verified
+
     def get_arp_table(self, vrf=""):
         """
         Get arp table information.
-
-        Return a list of dictionaries having the following set of keys:
-            * interface (string)
-            * mac (string)
-            * ip (string)
-            * age (float) (not support)
-
-        Sample output:
-            [
-                {
-                    'interface' : 'MgmtEth0/RSP0/CPU0/0',
-                    'mac'       : '5c:5e:ab:da:3c:f0',
-                    'ip'        : '172.17.17.1',
-                    'age'       : -1
-                },
-                {
-                    'interface': 'MgmtEth0/RSP0/CPU0/0',
-                    'mac'       : '66:0e:94:96:e0:ff',
-                    'ip'        : '172.17.17.2',
-                    'age'       : -1
-                }
-            ]
+    
+        :param vrf: optional VRF name to filter results
+        :return: list of dictionaries with keys interface, mac, ip, age
         """
         arp_table = []
-        output = self.device.send_command("display arp all")
-        re_arp = (
-            r"(?P<ip_address>\d+\.\d+\.\d+\.\d+)\s+(?P<mac>\S+)\s+(?P<exp>\d+|)\s+"
-            r"(?P<type>I|D|S|O)\S+\s+(?P<interface>\S+)"
+        command = "display arp all"
+        output = self.device.send_command(command)
+    
+        # Regex to parse ARP entries
+        # Sample lines:
+        # 172.16.1.9     0015-5dac-0172  20        D-0         MEth0/0/1      MGMT
+        # 172.16.1.169   1c36-34c9-4e30            I -         MEth0/0/1      MGMT
+        # 169.254.2.1    1c36-34c9-4e30            I -         MEth0/0/2
+        re_arp = re.compile(
+            r"^\s*(?P<ip>\d+\.\d+\.\d+\.\d+)\s+(?P<mac>[0-9a-fA-F-]+)\s+(?P<exp>\d*)\s+"
+            r"(?P<type>[IDS]\S*)\s+(?P<intf>\S+)(?:\s+(?P<vrf>\S+))?\s*$",
+            re.MULTILINE
         )
-        match = re.findall(re_arp, output, flags=re.M)
-
-        for arp in match:
-            # if arp[2].isdigit():
-            #     exp = float(arp[2]) * 60
-            # else:
-            #     exp = 0
-
-            entry = {
-                "interface": arp[4],
-                "mac": pretty_mac(arp[1]),
-                "ip": arp[0],
-                "age": -1.0,
-            }
-            arp_table.append(entry)
+    
+        for match in re_arp.finditer(output):
+            ip_addr = match.group("ip")
+            mac_raw = match.group("mac")
+            exp_str = match.group("exp")
+            intf = match.group("intf")
+            entry_vrf = match.group("vrf") if match.group("vrf") else ""
+    
+            # Apply VRF filter if specified
+            if vrf and entry_vrf != vrf:
+                continue
+    
+            # Convert expiration time from minutes to seconds
+            if exp_str.isdigit():
+                age = float(exp_str) * 60.0
+            else:
+                age = -1.0
+    
+            # Format MAC address
+            mac_addr = pretty_mac(mac_raw)
+    
+            arp_table.append({
+                "interface": intf,
+                "mac": mac_addr,
+                "ip": ip_addr,
+                "age": age
+            })
+    
         return arp_table
-
-    # verified
+    
+    
     def get_mac_address_table(self):
         """
         Return the MAC address table.
@@ -1692,10 +1875,6 @@ class VRPDriver(NetworkDriver):
     def get_bgp_config(self):
         pass
 
-    # develop
-    def get_network_instances(self):
-        pass
-
     # to verify
     def get_ntp_peers(self):
         """
@@ -1909,64 +2088,97 @@ class VRPDriver(NetworkDriver):
 
         return local_users
 
-    # developing
     def get_vlans(self):
-        pass
         """
-        {
-            "1": {
-                "name": "default",
-                "interfaces": [
-                    "GigabitEthernet0/9",
-                    "GigabitEthernet0/12",
-                    "GigabitEthernet0/22",
-                    "GigabitEthernet0/25",
-                    "TenGigabitEthernet0/1",
-                    "TenGigabitEthernet0/2"
-                ]
-            },
-            "603": {
-                "name": "Kuku",
-                "interfaces": [
-                    "GigabitEthernet0/10"
-                ]
-            "800": {
-                "name": "coopero",
-                "interfaces": [
-                    "GigabitEthernet0/19"
-                ]
+        Return a dictionary of VLANs with their names and member interfaces.
+        """
+        from napalm_huawei_vrp.utils import expand_interface
+    
+        output = self.device.send_command("display vlan")
+        # DEBUG
+        # print("=== FULL OUTPUT ===\n", output)
+    
+        # Find the start of the second table (descriptions)
+        desc_marker = "VID  Status  Property"
+        desc_pos = output.find(desc_marker)
+        if desc_pos == -1:
+            # fallback: use whole output for ports, and no descriptions
+            ports_section = output
+            desc_section = ""
+        else:
+            # split at the marker line
+            ports_section = output[:desc_pos]
+            desc_section = output[desc_pos:]
+    
+        # DEBUG
+        # print("=== PORTS SECTION ===\n", ports_section)
+    
+        # Parse ports table
+        current_vid = None
+        current_ports = []
+        vlans = {}
+    
+        for line in ports_section.splitlines():
+            line = line.rstrip()
+            # Skip empty lines, header lines, etc.
+            if not line or line.startswith("The total number") or line.startswith("U:"):
+                continue
+            # Try to match a line that starts with a VLAN ID (digits) and then "common"
+            match = re.match(r"^\s*(\d+)\s+common\s+(.*)$", line)
+            if match:
+                # Save previous VLAN if exists
+                if current_vid is not None:
+                    vlans[current_vid] = {"interfaces": current_ports, "name": ""}
+                current_vid = int(match.group(1))
+                current_ports = []
+                # Process ports on this line
+                rest = match.group(2).strip()
+                if rest:
+                    for token in rest.split():
+                        # Remove (D), (U) and prefixes UT:, TG:
+                        if '(' in token:
+                            token = token.split('(')[0]
+                        if token.startswith("UT:") or token.startswith("TG:"):
+                            token = token[3:]
+                        if token and token != "-":
+                            current_ports.append(token)
+            else:
+                # Continuation line (no VLAN ID, only ports indented)
+                if current_vid is not None:
+                    # line may contain ports with leading spaces
+                    for token in line.split():
+                        if '(' in token:
+                            token = token.split('(')[0]
+                        if token.startswith("UT:") or token.startswith("TG:"):
+                            token = token[3:]
+                        if token and token != "-" and '/' in token:
+                            current_ports.append(token)
+        # Save last VLAN
+        if current_vid is not None:
+            vlans[current_vid] = {"interfaces": current_ports, "name": ""}
+    
+        # Parse description table
+        # We look for lines like: "1    enable  default       enable  disable    VLAN 0001"
+        for line in desc_section.splitlines():
+            match = re.match(r"^\s*(\d+)\s+\S+\s+\S+\s+\S+\s+\S+\s+(.*)$", line)
+            if match:
+                vid = int(match.group(1))
+                desc = match.group(2).strip()
+                if vid in vlans:
+                    vlans[vid]["name"] = desc
+                else:
+                    vlans[vid] = {"interfaces": [], "name": desc}
+    
+        # Expand interface names
+        final_vlans = {}
+        for vid, data in vlans.items():
+            expanded = [expand_interface(intf) for intf in data["interfaces"]]
+            final_vlans[vid] = {
+                "name": data["name"],
+                "interfaces": expanded
             }
-        }
-        """
-
-    @staticmethod
-    def _separate_section(separator, content):
-        if content == "":
-            return []
-
-        # Break output into per-interface sections
-        interface_lines = re.split(separator, content, flags=re.M)
-
-        if len(interface_lines) == 1:
-            msg = "Unexpected output data:\n{}".format(interface_lines)
-            raise ValueError(msg)
-
-        # Get rid of the blank data at the beginning
-        interface_lines.pop(0)
-
-        # Must be pairs of data (the separator and section corresponding to it)
-        if len(interface_lines) % 2 != 0:
-            msg = "Unexpected output data:\n{}".format(interface_lines)
-            raise ValueError(msg)
-
-        # Combine the separator and section into one string
-        intf_iter = iter(interface_lines)
-
-        try:
-            new_interfaces = [line + next(intf_iter, "") for line in intf_iter]
-        except TypeError:
-            raise ValueError()
-        return new_interfaces
+    
+        return final_vlans
 
     def _delete_file(self, filename):
         command = "delete /unreserved /quiet {0}".format(filename)
@@ -2272,3 +2484,48 @@ class VRPDriver(NetworkDriver):
                 bandwidth
             )
         )
+    @staticmethod
+    def _separate_section(separator, content):
+        """Break output into per-interface sections."""
+        if content == "":
+            return []
+        # Break output into per-interface sections
+        interface_lines = re.split(separator, content, flags=re.M)
+        if len(interface_lines) == 1:
+            msg = "Unexpected output data:\n{}".format(interface_lines)
+            raise ValueError(msg)
+        # Get rid of the blank data at the beginning
+        interface_lines.pop(0)
+        # Must be pairs of data (the separator and section corresponding to it)
+        if len(interface_lines) % 2 != 0:
+            msg = "Unexpected output data:\n{}".format(interface_lines)
+            raise ValueError(msg)
+        # Combine the separator and section into one string
+        intf_iter = iter(interface_lines)
+        try:
+            new_interfaces = [line + next(intf_iter, "") for line in intf_iter]
+        except TypeError:
+            raise ValueError()
+        return new_interfaces
+
+    def get_inventory(self):
+        """
+        Return hardware inventory details.
+        """
+        from napalm_huawei_vrp.inventory import parse_inventory
+    
+        # Disable paging
+        self.device.send_command("screen-length 0 temporary", expect_string=r"[>#]")
+        
+        # Try with confirmation prompt
+        try:
+            output = self.device.send_command("display elabel", expect_string=r"Continue\? \[Y/N\]", read_timeout=10)
+            output += self.device.send_command("Y", expect_string=r"[>#]", read_timeout=120)
+        except ReadTimeout:
+            # No confirmation prompt, get output directly
+            output = self.device.send_command("display elabel", expect_string=r"[>#]", read_timeout=120)
+        
+        # Restore paging
+        self.device.send_command("screen-length 24", expect_string=r"[>#]")
+        
+        return parse_inventory(output)

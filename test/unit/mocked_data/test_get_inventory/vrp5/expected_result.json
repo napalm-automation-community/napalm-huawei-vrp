@@ -1,0 +1,38 @@
+[
+  {
+    "name": "Chassis",
+    "description": "Assembling Components,S5731-H48T4XC,S5731-H48T4XC,S5731-H48T4XC (48*10/100/1000BASE-T ports, 4*10GE SFP+ ports, 1*expansion slot, without power module)",
+    "serial": "1023A7",
+    "part_number": "02352QPT-009",
+    "model": "S5731-H48T4XC",
+    "manufactured": "2020-10-30",
+    "vendor": "Huawei"
+  },
+  {
+    "name": "Transceiver",
+    "description": "10300Mbps-850nm-LC-33(OM1),82(OM2),300(OM3),400(OM4)",
+    "serial": "COP2023122",
+    "part_number": "",
+    "model": "ML-P10G03DFM85LD",
+    "manufactured": "2020-02-20",
+    "vendor": "MLAXLINK"
+  },
+  {
+    "name": "Transceiver",
+    "description": "10300Mbps-850nm-LC-33(OM1),82(OM2),300(OM3),400(OM4)",
+    "serial": "COP2023122",
+    "part_number": "",
+    "model": "ML-P10G03DFM85LD",
+    "manufactured": "2020-02-20",
+    "vendor": "MLAXLINK"
+  },
+  {
+    "name": "Power Supply",
+    "description": "Function Module, AC PSU, PAC150S12-R, 150W AC Power Module",
+    "serial": "2102312DUY6TPA",
+    "part_number": "02312DUY",
+    "model": "PAC150S12-R",
+    "manufactured": "2020-11-02",
+    "vendor": "Huawei"
+  }
+]

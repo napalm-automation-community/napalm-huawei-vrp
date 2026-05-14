@@ -1,0 +1,7 @@
+------------------------------------------------------------
+ Slot    PowerID  Online   Mode   State      Power(W)
+------------------------------------------------------------
+ 0       PWR1     Present  AC     Supply     1000.00     
+ 0       PWR2     Present  AC     Supply     1000.00     
+ 1       PWR1     Present  AC     Supply     1000.00     
+ 1       PWR2     Present  AC     Supply     1000.00

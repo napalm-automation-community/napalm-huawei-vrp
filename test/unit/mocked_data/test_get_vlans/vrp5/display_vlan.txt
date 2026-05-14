@@ -1,0 +1,54 @@
+dis vlan
+The total number of VLANs is: 16
+--------------------------------------------------------------------------------
+U: Up;         D: Down;         TG: Tagged;         UT: Untagged;
+MP: Vlan-mapping;               ST: Vlan-stacking;
+#: ProtocolTransparent-vlan;    *: Management-vlan;
+--------------------------------------------------------------------------------
+
+VID  Type    Ports
+--------------------------------------------------------------------------------
+1    common  UT:GE0/0/5(D)      GE0/0/6(D)      GE0/0/7(D)      GE0/0/8(D)
+                GE0/0/9(D)      GE0/0/12(D)     GE0/0/13(D)     GE0/0/14(D)
+                GE0/0/15(D)     GE0/0/19(D)     GE0/0/20(D)     GE0/0/21(D)
+                GE0/0/22(D)     GE0/0/23(D)     GE0/0/24(D)     GE0/0/25(D)
+                GE0/0/26(D)     GE0/0/27(D)     GE0/0/28(D)     GE0/0/29(D)
+                GE0/0/30(D)     GE0/0/31(D)     GE0/0/32(D)     GE0/0/33(D)
+                GE0/0/34(D)     GE0/0/35(D)     GE0/0/36(D)     GE0/0/37(D)
+                GE0/0/38(D)     GE0/0/39(D)     GE0/0/40(D)     GE0/0/41(D)
+                GE0/0/42(D)     GE0/0/43(D)     GE0/0/48(D)     XGE0/0/4(D)
+16   common  UT:GE0/0/10(D)
+20   common  UT:GE0/0/44(D)     GE0/0/45(D)     GE0/0/46(U)
+21   common  TG:GE0/0/5(D)
+22   common  UT:GE0/0/11(D)
+73   common  UT:GE0/0/3(D)
+98   common  UT:GE0/0/2(D)
+100  common  UT:GE0/0/16(D)     GE0/0/17(D)
+150  common  UT:GE0/0/6(D)      GE0/0/13(D)     GE0/0/14(D)     GE0/0/15(D)
+448  common  UT:GE0/0/7(D)      GE0/0/9(D)
+552  common  TG:GE0/0/6(D)      GE0/0/7(D)      GE0/0/9(D)      GE0/0/13(D)
+                GE0/0/14(D)     GE0/0/15(D)
+911  common  UT:GE0/0/4(D)
+937  common
+973  common  UT:GE0/0/18(D)
+974  common  UT:GE0/0/1(D)
+1000 common
+
+VID  Status  Property      MAC-LRN Statistics Description
+--------------------------------------------------------------------------------
+1    enable  default       enable  disable    VLAN 0001
+16   enable  default       enable  disable    ap
+20   enable  default       enable  disable    VLAN 0020
+21   enable  default       enable  disable    VLAN 0021
+22   enable  default       enable  disable    VLAN 0022
+73   enable  default       enable  disable    NAT_V73
+98   enable  default       enable  disable    NAT_Wi-Fi
+100  enable  default       enable  disable    Old
+150  enable  default       enable  disable    NAT_North
+448  enable  default       enable  disable    VLAN 0448
+552  enable  default       enable  disable    takl
+911  enable  default       enable  disable    [911]
+937  enable  default       enable  disable    YUF
+973  enable  default       enable  disable    [973] Park
+974  enable  default       enable  disable    Rogv
+1000 enable  default       enable  disable    VLAN 1000

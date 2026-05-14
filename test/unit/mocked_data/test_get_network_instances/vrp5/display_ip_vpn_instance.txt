@@ -1,0 +1,9 @@
+ Total VPN-Instances configured      : 2
+ Total IPv4 VPN-Instances configured : 2
+ Total IPv6 VPN-Instances configured : 2
+
+  VPN-Instance Name               RD                    Address-family
+  MGMT                            65400:654000          IPv4
+  MGMT                                                  IPv6
+  TEST_VRF                        1.2.3.4:65400         IPv4
+  TEST_VRF                                              IPv6

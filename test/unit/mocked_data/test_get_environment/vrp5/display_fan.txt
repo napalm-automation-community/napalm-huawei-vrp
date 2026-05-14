@@ -1,0 +1,4 @@
+  Slot  FanID   Online    Status    Speed     Mode     Airflow            
+-------------------------------------------------------------------------
+ 0     1       Present   Normal    55%       Auto     Side-to-Back
+ 1     1       Present   Normal    55%       Auto     Side-to-Back

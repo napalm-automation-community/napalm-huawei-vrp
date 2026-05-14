@@ -1,177 +1,140 @@
-{
-  "global": {
-    "router_id": "10.0.1.1",
-    "peers": {
-      "10.0.0.2": {
-        "is_enabled": true,
-        "uptime": 4838400,
-        "remote_as": 65000,
-        "description": "internal-2",
-        "remote_id": "10.0.1.2",
-        "local_as": 65000,
-        "is_up": true,
-        "address_family": {
-          "ipv4 unicast": {
-            "sent_prefixes": 637213,
-            "accepted_prefixes": 3142,
-            "received_prefixes": 3142
-          },
-          "ipv6 unicast": {
-            "sent_prefixes": 36714,
-            "accepted_prefixes": 148,
-            "received_prefixes": 148
-          }
-        }
-      },
-      "10.0.0.3": {
-        "is_enabled": true,
-        "uptime": 133200,
-        "remote_as": 65000,
-        "description": "internal-3",
-        "remote_id": "10.0.1.3",
-        "local_as": 65000,
-        "is_up": true,
-        "address_family": {
-          "ipv4 unicast": {
-            "sent_prefixes": 966,
-            "accepted_prefixes": 1,
-            "received_prefixes": 1
-          },
-          "ipv6 unicast": {
-            "sent_prefixes": 105,
-            "accepted_prefixes": 2,
-            "received_prefixes": 2
-          }
-        }
-      },
-      "192.168.0.1": {
-        "is_enabled": true,
-        "uptime": 3888000,
-        "remote_as": 65001,
-        "description": "external-1",
-        "remote_id": "192.168.1.1",
-        "local_as": 65000,
-        "is_up": true,
-        "address_family": {
-          "ipv4 unicast": {
-            "sent_prefixes": 709,
-            "accepted_prefixes": 0,
-            "received_prefixes": 0
-          }
-        }
-      },
-      "192.168.0.2": {
-        "is_enabled": true,
-        "uptime": -1,
-        "remote_as": 65002,
-        "description": "external-2",
-        "remote_id": "0.0.0.0",
-        "local_as": 65000,
-        "is_up": false,
-        "address_family": {
-          "ipv4 unicast": {
-            "sent_prefixes": -1,
-            "accepted_prefixes": -1,
-            "received_prefixes": -1 
-          }
-        }
-      },
-      "192.168.0.3": {
-        "is_enabled": false,
-        "uptime": -1,
-        "remote_as": 65003,
-        "description": "external-3",
-        "remote_id": "0.0.0.0",
-        "local_as": 65000,
-        "is_up": false,
-        "address_family": {
-          "ipv4 unicast": {
-            "sent_prefixes": -1,
-            "accepted_prefixes": -1,
-            "received_prefixes": -1
-          }
-        }
-      },
-      "192.168.0.4": {
-        "is_enabled": true,
-        "uptime": 16243200,
-        "remote_as": 65004,
-        "description": "external-4",
-        "remote_id": "192.168.1.4",
-        "local_as": 65000,
-        "is_up": true,
-        "address_family": {
-          "ipv4 unicast": {
-            "sent_prefixes": 213,
-            "accepted_prefixes": 629700,
-            "received_prefixes": 629700
-          }
-        }
-      },
-      "2001:db8::1": {
-        "is_enabled": true,
-        "uptime": 3456000,
-        "remote_as": 65001,
-        "description": "external-1",
-        "remote_id": "192.168.1.1",
-        "local_as": 65000,
-        "is_up": true,
-        "address_family": {
-          "ipv6 unicast": {
-            "sent_prefixes": 35,
-            "accepted_prefixes": 0,
-            "received_prefixes": 0
-          }
-        }
-      },
-      "2001:db8::2": {
-        "is_enabled": true,
-        "uptime": 10713600,
-        "remote_as": 65002,
-        "description": "external-2",
-        "remote_id": "192.168.1.2",
-        "local_as": 65000,
-        "is_up": true,
-        "address_family": {
-          "ipv6 unicast": {
-            "sent_prefixes": 36,
-            "accepted_prefixes": 1,
-            "received_prefixes": 1
-          }
-        }
-      },
-      "2001:db8::3": {
-        "is_enabled": false,
-        "uptime": -1,
-        "remote_as": 65003,
-        "description": "external-3",
-        "remote_id": "0.0.0.0",
-        "local_as": 65000,
-        "is_up": false,
-        "address_family": {
-          "ipv6 unicast": {
-            "sent_prefixes": -1,
-            "accepted_prefixes": -1,
-            "received_prefixes": -1
-          }
-        }
-      },
-      "2001:db8::4": {
-        "is_enabled": true,
-        "uptime": 16243200,
-        "remote_as": 65004,
-        "description": "external-4",
-        "remote_id": "192.168.1.4",
-        "local_as": 65000,
-        "is_up": true,
-        "address_family": {
-          "ipv6 unicast": {
-            "sent_prefixes": 29,
-            "accepted_prefixes": 36387,
-            "received_prefixes": 36387
-          }
-        }
-      }
-    }
+  "1": {
+    "name": "VLAN 0001",
+    "interfaces": [
+      "GigabitEthernet0/0/5",
+      "GigabitEthernet0/0/6",
+      "GigabitEthernet0/0/7",
+      "GigabitEthernet0/0/8",
+      "GigabitEthernet0/0/9",
+      "GigabitEthernet0/0/12",
+      "GigabitEthernet0/0/13",
+      "GigabitEthernet0/0/14",
+      "GigabitEthernet0/0/15",
+      "GigabitEthernet0/0/19",
+      "GigabitEthernet0/0/20",
+      "GigabitEthernet0/0/21",
+      "GigabitEthernet0/0/22",
+      "GigabitEthernet0/0/23",
+      "GigabitEthernet0/0/24",
+      "GigabitEthernet0/0/25",
+      "GigabitEthernet0/0/26",
+      "GigabitEthernet0/0/27",
+      "GigabitEthernet0/0/28",
+      "GigabitEthernet0/0/29",
+      "GigabitEthernet0/0/30",
+      "GigabitEthernet0/0/31",
+      "GigabitEthernet0/0/32",
+      "GigabitEthernet0/0/33",
+      "GigabitEthernet0/0/34",
+      "GigabitEthernet0/0/35",
+      "GigabitEthernet0/0/36",
+      "GigabitEthernet0/0/37",
+      "GigabitEthernet0/0/38",
+      "GigabitEthernet0/0/39",
+      "GigabitEthernet0/0/40",
+      "GigabitEthernet0/0/41",
+      "GigabitEthernet0/0/42",
+      "GigabitEthernet0/0/43",
+      "GigabitEthernet0/0/48",
+      "TenGigabitEthernet0/0/4"
+    ]
+  },
+  "16": {
+    "name": "ap",
+    "interfaces": [
+      "GigabitEthernet0/0/10"
+    ]
+  },
+  "20": {
+    "name": "VLAN 0020",
+    "interfaces": [
+      "GigabitEthernet0/0/44",
+      "GigabitEthernet0/0/45",
+      "GigabitEthernet0/0/46"
+    ]
+  },
+  "21": {
+    "name": "VLAN 0021",
+    "interfaces": [
+      "GigabitEthernet0/0/5"
+    ]
+  },
+  "22": {
+    "name": "VLAN 0022",
+    "interfaces": [
+      "GigabitEthernet0/0/11"
+    ]
+  },
+  "73": {
+    "name": "NAT_V73",
+    "interfaces": [
+      "GigabitEthernet0/0/3"
+    ]
+  },
+  "98": {
+    "name": "NAT_Wi-Fi",
+    "interfaces": [
+      "GigabitEthernet0/0/2"
+    ]
+  },
+  "100": {
+    "name": "OldT",
+    "interfaces": [
+      "GigabitEthernet0/0/16",
+      "GigabitEthernet0/0/17"
+    ]
+  },
+  "150": {
+    "name": "NAT_North",
+    "interfaces": [
+      "GigabitEthernet0/0/6",
+      "GigabitEthernet0/0/13",
+      "GigabitEthernet0/0/14",
+      "GigabitEthernet0/0/15"
+    ]
+  },
+  "448": {
+    "name": "VLAN 0448",
+    "interfaces": [
+      "GigabitEthernet0/0/7",
+      "GigabitEthernet0/0/9"
+    ]
+  },
+  "552": {
+    "name": "takl",
+    "interfaces": [
+      "GigabitEthernet0/0/6",
+      "GigabitEthernet0/0/7",
+      "GigabitEthernet0/0/9",
+      "GigabitEthernet0/0/13",
+      "GigabitEthernet0/0/14",
+      "GigabitEthernet0/0/15"
+    ]
+  },
+  "911": {
+    "name": "[911]",
+    "interfaces": [
+      "GigabitEthernet0/0/4"
+    ]
+  },
+  "973": {
+    "name": "[973] Park",
+    "interfaces": [
+      "GigabitEthernet0/0/18"
+    ]
+  },
+  "974": {
+    "name": "Rogv",
+    "interfaces": [
+      "GigabitEthernet0/0/1"
+    ]
+  },
+  "937": {
+    "name": "YUF",
+    "interfaces": []
+  },
+  "1000": {
+    "name": "VLAN 1000",
+    "interfaces": []
   }
 }

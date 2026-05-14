@@ -1,0 +1,116 @@
+Info: It is executing, please wait...
+/$[System Integration Version]
+/$SystemIntegrationVersion=3.0
+
+
+[Slot_0]
+/$[Board Integration Version]
+/$BoardIntegrationVersion=3.0
+
+
+[Main_Board]
+
+/$[ArchivesInfo Version]
+/$ArchivesInfoVersion=3.0
+
+
+[Board Properties]
+BoardType=S5731-H48T4XC
+BarCode=1023A7
+Item=02352QPT-009
+Description=Assembling Components,S5731-H48T4XC,S5731-H48T4XC,S5731-H48T4XC (48*10/100/1000BASE-T ports, 4*10GE SFP+ ports, 1*expansion slot, without power module)
+Manufactured=2020-10-30
+VendorName=Huawei
+IssueNumber=00
+CLEICode=
+BOM=
+Model=S5731-H48T4XC
+/$ElabelVersion=4.0
+
+
+
+
+[Port_XGigabitEthernet0/0/1]
+/$[ArchivesInfo Version]
+/$ArchivesInfoVersion=3.0
+
+
+[Board Properties]
+BoardType=ML-P10G03DFM85LD
+BarCode=COP2023122
+Item=
+Description=10300Mbps-850nm-LC-33(OM1),82(OM2),300(OM3),400(OM4)
+Manufactured=2020-02-20
+/$VendorName=MLAXLINK
+IssueNumber=
+CLEICode=
+BOM=
+
+
+[Port_XGigabitEthernet0/0/2]
+/$[ArchivesInfo Version]
+/$ArchivesInfoVersion=3.0
+
+
+[Board Properties]
+BoardType=ML-P10G03DFM85LD
+BarCode=COP2023122
+Item=
+Description=10300Mbps-850nm-LC-33(OM1),82(OM2),300(OM3),400(OM4)
+Manufactured=2020-02-20
+/$VendorName=MLAXLINK
+IssueNumber=
+CLEICode=
+BOM=
+
+
+[Port_XGigabitEthernet0/0/3]
+/$[ArchivesInfo Version]
+/$ArchivesInfoVersion=3.0
+
+
+[Board Properties]
+BoardType=
+BarCode=
+Item=
+Description=
+Manufactured=
+/$VendorName=
+IssueNumber=
+CLEICode=
+BOM=
+
+
+[Port_XGigabitEthernet0/0/4]
+/$[ArchivesInfo Version]
+/$ArchivesInfoVersion=3.0
+
+
+[Board Properties]
+BoardType=
+BarCode=
+Item=
+Description=
+Manufactured=
+/$VendorName=
+IssueNumber=
+CLEICode=
+BOM=
+
+
+/$[ArchivesInfo Version]
+/$ArchivesInfoVersion=3.0
+
+
+[Board Properties]
+BoardType=PAC150S12-R
+BarCode=2102312DUY6TPA
+Item=02312DUY
+Description=Function Module, AC PSU, PAC150S12-R, 150W AC Power Module
+Manufactured=2020-11-02
+VendorName=Huawei
+IssueNumber=00
+CLEICode=
+BOM=
+Model=PAC150S12-R
+/$ElabelVersion=4.0

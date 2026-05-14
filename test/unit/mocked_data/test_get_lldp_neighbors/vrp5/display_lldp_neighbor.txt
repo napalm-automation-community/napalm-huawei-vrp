@@ -1,0 +1,64 @@
+MEth0/0/1 has 1 neighbor(s):
+
+Neighbor index :1
+Chassis type   :MAC address
+Chassis ID     :ac99-2968-ccb0
+Port ID type   :Interface name
+Port ID        :GigabitEthernet0/0/44
+Port description    :MGMT-13
+System name         :mgmt-38-mox1
+System description  :Huawei Switch S5731-H48T4XC
+Huawei Versatile Routing Platform Software
+VRP (R) software, Version 5.170 (S5731 V200R022C00SPC500)
+Copyright (C) 2000-2022 HUAWEI TECH Co., Ltd.
+System capabilities supported   :bridge router
+System capabilities enabled     :bridge router
+Management address type  :ipv4
+Management address value :172.22.19.38
+OID  :0.6.15.43.6.1.4.1.2011.5.25.41.1.2.1.1.1.
+Expired time   :110s
+
+Device 0 information:
+  Device serial number :1023A7808845
+  Device model name    :S5731-H48T4XC
+
+Port VLAN ID(PVID)  :13
+VLAN name of VLAN  1:VLAN 0001
+
+Auto-negotiation supported    :Yes
+Auto-negotiation enabled      :Yes
+OperMau   :speed(100)/duplex(Full)
+
+Power port class            :PD
+PSE power supported         :No
+PSE power enabled           :No
+PSE pairs control ability   :No
+Power pairs                 :Unknown
+Port power classification   :Unknown
+
+Link aggregation supported:Yes
+Link aggregation enabled :No
+Aggregation port ID      :0
+
+Maximum frame Size       :9216
+
+MultiGE0/0/1 has 2 neighbor(s):
+
+Neighbor index :1
+Chassis type   :MAC address
+Chassis ID     :f445-882e-fe40
+Port ID type   :Interface name
+Port ID        :MultiGE0/0/0
+Port description    :HUAWEI, AP Series, MultiGE0/0/0 Interface
+System name         :2K540
+System description  :Huawei AP AirEngine5761-21
+Huawei Versatile Routing Platform Software
+VRP (R) software, Version 5.170 (AirEngine5761-21 V200R023C00SPC100)
+Copyright (C) 2011-2023 Huawei Technologies Co.,Ltd
+System capabilities supported   :wlanAccessPoint
+System capabilities enabled     :wlanAccessPoint
+...
+
+Neighbor index :2
+Chassis ID     :f445-882e-f780
+...

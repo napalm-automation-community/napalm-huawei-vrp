@@ -1,0 +1,11 @@
+{
+  "MEth0/0/1": {
+    "is_up": true,
+    "is_enabled": true,
+    "description": "",
+    "last_flapped": -1.0,
+    "mtu": 1500,
+    "speed": 100.0,
+    "mac_address": "AC:99:29:68:CF:20"
+  }
+}

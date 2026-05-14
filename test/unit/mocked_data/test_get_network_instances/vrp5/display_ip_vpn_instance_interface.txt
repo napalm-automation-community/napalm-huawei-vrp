@@ -1,0 +1,8 @@
+ Total VPN-Instances configured      : 2
+
+ VPN-Instance Name and ID : MGMT, 1
+  Interface Number : 1
+  Interface list : MEth0/0/1
+
+ VPN-Instance Name and ID : TEST_VRF, 2
+  Interface Number : 0

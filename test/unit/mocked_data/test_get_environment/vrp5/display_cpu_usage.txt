@@ -1,0 +1,5 @@
+CPU Usage Stat. Cycle: 60 (Second)
+CPU Usage            : 28% Max: 87%
+CPU Usage Stat. Time : 2026-03-20  14:24:36 
+CPU utilization for five seconds: 25%: one minute: 24%: five minutes: 25%
+Max CPU Usage Stat. Time : 2026-03-20 13:50:44.

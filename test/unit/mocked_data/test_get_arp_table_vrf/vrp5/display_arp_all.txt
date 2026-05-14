@@ -1,0 +1,19 @@
+IP ADDRESS      MAC ADDRESS     EXPIRE(M) TYPE        INTERFACE   VPN-INSTANCE
+                                    VLAN/CEVLAN(SIP/DIP)
+------------------------------------------------------------------------------
+172.17.13.169   1ce6-39c7-4e30            I -         MEth0/0/1      MGMT
+172.17.13.9     0015-5dac-0172  20        D-0         MEth0/0/1      MGMT
+172.17.13.160   0015-5dab-030b  8         D-0         MEth0/0/1      MGMT
+172.17.13.245   4812-5874-e97f  16        D-0         MEth0/0/1      MGMT
+172.17.13.5     ac99-2968-ccbe  16        D-0         MEth0/0/1      MGMT
+172.17.13.161   0015-5daa-035a  20        D-0         MEth0/0/1      MGMT
+172.17.13.250   3cff-d87d-6ece  20        D-0         MEth0/0/1      MGMT
+172.17.13.218   0015-5dac-023f  16        D-0         MEth0/0/1      MGMT
+172.17.13.33    4812-5874-ecef  8         D-0         MEth0/0/1      MGMT
+172.17.13.35    4812-5874-e97f  20        D-0         MEth0/0/1      MGMT
+172.17.13.151   bc24-115f-40dc  18        D-0         MEth0/0/1      MGMT
+169.254.2.1     1ce6-39c7-4e30            I -         MEth0/0/2
+172.22.16.169   1ce6-39c7-4e32            I -         Eth-Trunk1
+172.22.17.169   1ce6-39c7-4e33            I -         Eth-Trunk2
+------------------------------------------------------------------------------
+Total:14        Dynamic:10      Static:0     Interface:4

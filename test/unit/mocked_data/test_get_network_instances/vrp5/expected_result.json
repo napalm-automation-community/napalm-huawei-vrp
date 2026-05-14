@@ -1,0 +1,51 @@
+{
+  "MGMT": {
+    "name": "MGMT",
+    "type": "L3VRF",
+    "state": {
+      "route_distinguisher": "65400:654000"
+    },
+    "interfaces": {
+      "interface": {
+        "MEth0/0/1": {}
+      }
+    },
+    "address_families": {
+      "ipv4": {
+        "route_distinguisher": "65400:654000"
+      },
+      "ipv6": {
+        "route_distinguisher": ""
+      }
+    }
+  },
+  "TEST_VRF": {
+    "name": "TEST_VRF",
+    "type": "L3VRF",
+    "state": {
+      "route_distinguisher": "1.2.3.4:65400"
+    },
+    "interfaces": {
+      "interface": {}
+    },
+    "address_families": {
+      "ipv4": {
+        "route_distinguisher": "1.2.3.4:65400"
+      },
+      "ipv6": {
+        "route_distinguisher": ""
+      }
+    }
+  },
+  "default": {
+    "name": "default",
+    "type": "DEFAULT_INSTANCE",
+    "state": {
+      "route_distinguisher": null
+    },
+    "interfaces": {
+      "interface": {}
+    },
+    "address_families": {}
+  }
+}

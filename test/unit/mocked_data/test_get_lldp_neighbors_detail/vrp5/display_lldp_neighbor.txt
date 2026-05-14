@@ -1,0 +1,217 @@
+MEth0/0/1 has 1 neighbor(s):
+
+Neighbor index :1
+Chassis type   :MAC address
+Chassis ID     :acdc-1234-ccb0
+Port ID type   :Interface name
+Port ID        :GigabitEthernet0/0/7
+Port description    :MGMT-13
+System name         :mgmt-38-mox1
+System description  :Huawei Switch S5731-H48T4XC
+Huawei Versatile Routing Platform Software
+VRP (R) software, Version 5.170 (S5731 V200R022C00SPC500)
+Copyright (C) 2000-2022 HUAWEI TECH Co., Ltd.
+System capabilities supported   :bridge router
+System capabilities enabled     :bridge router
+Management address type  :ipv4
+Management address value :172.22.19.38
+OID  :0.6.15.43.6.1.4.1.2011.5.25.41.1.2.1.1.1.
+Expired time   :111s
+
+Device 0 infomation:
+  Device serial number :123445808845
+  Device model name    :S5731-H48T4XC
+
+Port VLAN ID(PVID)  :13
+VLAN name of VLAN  1:VLAN 0001
+
+Auto-negotiation supported    :Yes
+Auto-negotiation enabled      :Yes
+OperMau   :speed(100)/duplex(Full)
+
+Power port class            :PD
+PSE power supported         :No
+PSE power enabled           :No
+PSE pairs control ability   :No
+Power pairs                 :Unknown
+Port power classification   :Unknown
+
+Link aggregation supported:Yes
+Link aggregation enabled :No
+Aggregation port ID      :0
+
+Maximum frame Size       :9216
+
+GigabitEthernet0/0/46 has 1 neighbor(s):
+
+Neighbor index :1
+Chassis type   :MAC address
+Chassis ID     :acdc-1234-cf20
+Port ID type   :Interface name
+Port ID        :GigabitEthernet0/0/47
+Port description    :GigabitEthernet0/0/47
+System name         :peer-36-mox2
+System description  :Huawei Switch S5731-H48T4XC
+Huawei Versatile Routing Platform Software
+VRP (R) software, Version 5.170 (S5731 V200R022C00SPC500)
+Copyright (C) 2000-2022 HUAWEI TECH Co., Ltd.
+System capabilities supported   :bridge router
+System capabilities enabled     :bridge router
+Management address type  :ipv4
+Management address value :172.17.13.36
+OID  :0.6.15.43.6.1.4.1.2011.5.25.41.1.2.1.1.1.
+Expired time   :108s
+
+Device 0 infomation:
+  Device serial number :123454508884
+  Device model name    :S5731-H48T4XC
+
+
+Auto-negotiation supported    :Yes
+Auto-negotiation enabled      :Yes
+OperMau   :speed(1000)/duplex(Full)
+
+Power port class            :PD
+PSE power supported         :No
+PSE power enabled           :No
+PSE pairs control ability   :No
+Power pairs                 :Unknown
+Port power classification   :Unknown
+
+Link aggregation supported:Yes
+Link aggregation enabled :No
+Aggregation port ID      :0
+
+Maximum frame Size       :9216
+
+GigabitEthernet0/0/47 has 1 neighbor(s):
+
+Neighbor index :1
+Chassis type   :MAC address
+Chassis ID     :acdc-1234-cf20
+Port ID type   :Interface name
+Port ID        :GigabitEthernet0/0/46
+Port description    :GigabitEthernet0/0/46
+System name         :peer-36-mox2
+System description  :Huawei Switch S5731-H48T4XC
+Huawei Versatile Routing Platform Software
+VRP (R) software, Version 5.170 (S5731 V200R022C00SPC500)
+Copyright (C) 2000-2022 HUAWEI TECH Co., Ltd.
+System capabilities supported   :bridge router
+System capabilities enabled     :bridge router
+Management address type  :ipv4
+Management address value :172.17.13.36
+OID  :0.6.15.43.6.1.4.1.2011.5.25.41.1.2.1.1.1.
+Expired time   :106s
+
+Device 0 infomation:
+  Device serial number :123446668884
+  Device model name    :S5731-H48T4XC
+
+Port VLAN ID(PVID)  :20
+VLAN name of VLAN  1:VLAN 0001
+
+Auto-negotiation supported    :Yes
+Auto-negotiation enabled      :Yes
+OperMau   :speed(1000)/duplex(Full)
+
+Power port class            :PD
+PSE power supported         :No
+PSE power enabled           :No
+PSE pairs control ability   :No
+Power pairs                 :Unknown
+Port power classification   :Unknown
+
+Link aggregation supported:Yes
+Link aggregation enabled :No
+Aggregation port ID      :0
+
+Maximum frame Size       :9216
+
+XGigabitEthernet0/0/1 has 1 neighbor(s):
+
+Neighbor index :1
+Chassis type   :MAC address
+Chassis ID     :acdc-1234-cdd0
+Port ID type   :Interface name
+Port ID        :XGigabitEthernet0/0/4
+Port description    :SPINE-249
+System name         :peer-32
+System description  :Huawei Switch S5731-H48T4XC
+Huawei Versatile Routing Platform Software
+VRP (R) software, Version 5.170 (S5731 V200R022C00SPC500)
+Copyright (C) 2000-2022 HUAWEI TECH Co., Ltd.
+System capabilities supported   :bridge router
+System capabilities enabled     :bridge router
+Management address type  :ipv4
+Management address value :172.22.19.32
+OID  :0.6.15.43.6.1.4.1.2011.5.25.41.1.2.1.1.1.
+Expired time   :109s
+
+Device 0 infomation:
+  Device serial number :1234556808863
+  Device model name    :S5731-H48T4XC
+
+Port VLAN ID(PVID)  :0
+VLAN name of VLAN  1:VLAN 0001
+
+Auto-negotiation supported    :No
+Auto-negotiation enabled      :No
+OperMau   :speed(10000)/duplex(Full)
+
+Power port class            :PD
+PSE power supported         :No
+PSE power enabled           :No
+PSE pairs control ability   :No
+Power pairs                 :Unknown
+Port power classification   :Unknown
+
+Link aggregation supported:Yes
+Link aggregation enabled :Yes
+Aggregation port ID      :36
+
+Maximum frame Size       :9216
+
+XGigabitEthernet0/0/2 has 1 neighbor(s):
+
+Neighbor index :1
+Chassis type   :MAC address
+Chassis ID     :acdc-1234-cf30
+Port ID type   :Interface name
+Port ID        :XGigabitEthernet0/0/2
+Port description    :XGigabitEthernet0/0/2
+System name         :peer-34
+System description  :Huawei Switch S5731-H48T4XC
+Huawei Versatile Routing Platform Software
+VRP (R) software, Version 5.170 (S5731 V200R022C00SPC500)
+Copyright (C) 2000-2022 HUAWEI TECH Co., Ltd.
+System capabilities supported   :bridge router
+System capabilities enabled     :bridge router
+Management address type  :ipv4
+Management address value :172.22.19.34
+OID  :0.6.15.43.6.1.4.1.2011.5.25.41.1.2.1.1.1.
+Expired time   :93s
+
+Device 0 infomation:
+  Device serial number :123344808885
+  Device model name    :S5731-H48T4XC
+
+Port VLAN ID(PVID)  :0
+VLAN name of VLAN  1:VLAN 0001
+
+Auto-negotiation supported    :No
+Auto-negotiation enabled      :No
+OperMau   :speed(10000)/duplex(Full)
+
+Power port class            :PD
+PSE power supported         :No
+PSE power enabled           :No
+PSE pairs control ability   :No
+Power pairs                 :Unknown
+Port power classification   :Unknown
+
+Link aggregation supported:Yes
+Link aggregation enabled :Yes
+Aggregation port ID      :36
+
+Maximum frame Size       :9216

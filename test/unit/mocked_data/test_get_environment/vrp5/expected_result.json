@@ -1,0 +1,23 @@
+{
+  "fans": {
+    "Fan-0-1": {"status": true},
+    "Fan-1-1": {"status": true}
+  },
+  "power": {
+    "PWR1-0": {"capacity": 1000.0, "output": null, "status": true},
+    "PWR2-0": {"capacity": 1000.0, "output": null, "status": true},
+    "PWR1-1": {"capacity": 1000.0, "output": null, "status": true},
+    "PWR2-1": {"capacity": 1000.0, "output": null, "status": true}
+  },
+  "temperature": {
+    "slot0": {"is_alert": false, "is_critical": false, "temperature": 52.0},
+    "slot1": {"is_alert": false, "is_critical": false, "temperature": 48.0}
+  },
+  "cpu": {
+    "0": {"%usage": "25"}
+  },
+  "memory": {
+    "available_ram": 1827144512,
+    "used_ram": 307748236
+  }
+}

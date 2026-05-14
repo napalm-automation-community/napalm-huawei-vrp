@@ -1,0 +1,33 @@
+MEth0/0/1 current state : UP
+Line protocol current state : UP
+Last line protocol up time : 2026-02-20 13:32:33 UTC+03:00
+Description:
+Route Port,The MTU is 1500
+Internet Address is 172.17.13.36/24
+IP Sending Frames' Format is PKTFMT_ETHNT_2, Hardware address is ac99-2968-cf20
+Last physical up time   : 2026-02-20 13:32:33 UTC+03:00
+Last physical down time : 2026-02-20 13:31:32 UTC+03:00
+Current system time: 2026-03-23 19:37:51+03:00
+Speed : 100,    Loopback: NONE
+Duplex: FULL,   Negotiation: ENABLE
+
+Last 300 seconds input rate:  9384 bits/sec, 7 packets/sec
+Last 300 seconds output rate: 288 bits/sec, 1 packets/sec
+
+Input:  20837830 Packets, 2971096295 Bytes
+  Unicast:                     247025,  Multicast:                 11243702
+  Broadcast:                  9347103
+  Oversize:                         0,  Undersize:                        0
+  FCS:                              0,  Pause:                            0
+
+Output: 293544 Packets, 56461685 Bytes
+  Unicast:                     113540,  Multicast:                    89988
+  Broadcast:                    90016
+  Oversize:                         0,  Defer:                            0
+  FCS:                              0,  Pause:                            0
+  Collision:                        0
+
+    Input bandwidth utilization  : 0.01%
+    Output bandwidth utilization : 0.01%
+
+
